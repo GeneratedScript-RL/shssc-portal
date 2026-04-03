@@ -31,9 +31,10 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-3">
           <div className="relative h-10 w-10 overflow-hidden rounded-full bg-white">
             <Image
-              src="/icon.jpg"
+              src="/icon.png"
               alt="Student Council Emblem"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
           </div>

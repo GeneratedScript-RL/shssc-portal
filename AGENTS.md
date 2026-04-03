@@ -235,11 +235,11 @@ CREATE TABLE ranks (
 CREATE TABLE users (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   auth_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-  student_id integer UNIQUE NOT NULL,
-  email text UNIQUE NOT NULL,
+  email text UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._%+-]+@gendejesus\.edu\.ph$'),
   full_name text NOT NULL,
   avatar_url text,
   access_level_id uuid REFERENCES access_levels(id),
+  privacy_consent boolean NOT NULL DEFAULT false,
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz DEFAULT now(),
   created_by uuid REFERENCES users(id)
@@ -752,8 +752,8 @@ export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
 ### Registration flow (`/api/auth/register`)
 
-1. Validate request body with Zod: `{ student_id: z.number().int(), email: z.string().email(), password: z.string().min(8), full_name: z.string().min(2) }`
-2. Check uniqueness of `student_id` in `users` table. If taken, return `400 { error: 'This Student ID is already registered.' }`.
+1. Validate request body with Zod: `{ email: z.string().email().refine(e => e.endsWith('@gendejesus.edu.ph')), password: z.string().min(8), full_name: z.string().min(2), privacy_consent: z.literal(true) }`
+2. Check if email exists in users table. If so, return 400 { error: 'Email already registered.' }.
 3. Call `supabase.auth.admin.createUser({ email, password, email_confirm: false })` using service role client.
 4. Insert into `users` table with `auth_id = result.user.id` and the default `Student` access level.
 5. Send verification email via Supabase Auth's built-in flow.
@@ -762,7 +762,7 @@ export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 ### Sysadmin account creation (`POST /api/users`)
 
 1. Require `is_sysadmin()` on caller.
-2. Same Student ID uniqueness check.
+2. Same email ID uniqueness check.
 3. Accept `access_level_id` in body. Apply it directly.
 4. Send invite email via `supabase.auth.admin.inviteUserByEmail()`.
 
@@ -886,7 +886,7 @@ All admin routes are wrapped by `(admin)/admin/layout.tsx` which renders `AdminS
 
 **Permissions Grid** (`/admin/access-levels`): Render a full matrix table. Rows = access levels, columns = all permission keys from `PERMISSIONS`. Each cell is a checkbox. Toggling a checkbox calls `PATCH /api/access-levels/[id]/permissions` with `{ permission, granted }`. Optimistically update UI, revert on error.
 
-**Roster Editor** (`/admin/roster`): Select school year. Show current entries in a table. Add entry form: search user by name or student ID, select position title, select rank from `ranks` table, optionally assign committee. Save inserts into `officer_roster_entries`. Sysadmin can also edit legacy (past) rosters.
+**Roster Editor** (`/admin/roster`): Select school year. Show current entries in a table. Add entry form: search user by name, select position title, select rank from `ranks` table, optionally assign committee. Save inserts into `officer_roster_entries`. Sysadmin can also edit legacy (past) rosters.
 
 **User detail** (`/admin/users/[id]`): Show all user info. Dropdowns to change access level. Multi-select to assign/remove ranks. Multi-select to assign/remove awards. Toggle `is_active`. Cannot delete — only deactivate.
 

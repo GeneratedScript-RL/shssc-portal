@@ -45,20 +45,17 @@ const mockAnnouncements: Announcement[] = [
 
 export default function AnnouncementsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % mockAnnouncements.length);
-    }, 5000);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % mockAnnouncements.length);
+    }, 3000);
+
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, []);
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const goToPrev = () => {
