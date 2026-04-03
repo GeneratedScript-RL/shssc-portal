@@ -958,6 +958,11 @@ theme: {
 
 Design principles: clean, minimal, card-based, high contrast. Mobile-first. Sidebar collapses to bottom nav on mobile. All interactive elements must have a minimum 44×44px touch target. Use shadcn/ui as the base component layer — do not override shadcn styles globally, extend with Tailwind utilities at the component level.
 
+-- Ive included a icon.jpg which is the icon emblem of the student council.
+-- design a green header at the top, which in the center left of the green header will hold the student council emblem, and on the right side of the header will include all the tabs. Below the header will be the main page.
+-- design the panels for role/access/rank management and other sys admin panels similar to roblox group management
+-- for the announcements, design it like discord forums, where you see a bunch of rectangles with each rectangle having a title, and a description at the bottom, and opening the rectangle will open a panel on the side giving the full text.
+
 ---
 
 ## PERFORMANCE REQUIREMENTS
