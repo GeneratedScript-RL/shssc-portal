@@ -118,7 +118,7 @@ shssc-portal/
 │   │   ├── RichTextRenderer.tsx          # Renders TipTap JSON to HTML
 │   │   ├── RichTextEditor.tsx            # TipTap editor component
 │   │   ├── PermissionGate.tsx            # Conditionally renders children based on permission
-│   │   └── StudentIdInput.tsx            # Integer-only input with uniqueness error state
+│   │   └── EmailInput.tsx            # Email input with uniqueness error state
 │   └── features/
 │       ├── home/
 │       │   ├── AnnouncementsCarousel.tsx

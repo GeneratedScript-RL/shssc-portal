@@ -19,11 +19,11 @@ CREATE TABLE ranks (
 CREATE TABLE users (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   auth_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-  student_id integer UNIQUE NOT NULL,
-  email text UNIQUE NOT NULL,
+  email text UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._%+-]+@gendejesus\.edu\.ph$'),
   full_name text NOT NULL,
   avatar_url text,
   access_level_id uuid REFERENCES access_levels(id),
+  privacy_consent boolean NOT NULL DEFAULT false,
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz DEFAULT now(),
   created_by uuid REFERENCES users(id)
