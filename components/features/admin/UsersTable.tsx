@@ -10,7 +10,7 @@ interface UsersTableProps {
 export default function UsersTable({ users }: UsersTableProps) {
   return (
     <div className="roblox-panel">
-      <Table>
+      <Table className="min-w-[40rem]">
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>

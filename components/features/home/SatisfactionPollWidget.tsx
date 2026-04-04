@@ -55,7 +55,7 @@ export default function SatisfactionPollWidget({
 
   return (
     <section className="panel">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-orange">
             Satisfaction Poll
@@ -68,7 +68,7 @@ export default function SatisfactionPollWidget({
             month.
           </p>
         </div>
-        <Badge>{historicalAverages.length} months</Badge>
+        <Badge className="self-start">{historicalAverages.length} months</Badge>
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <div className="rounded-[1.5rem] border border-brand-green/10 bg-brand-green/[0.03] p-4">
@@ -110,7 +110,7 @@ export default function SatisfactionPollWidget({
             </div>
           )}
         </div>
-        <div className="h-44 rounded-[1.5rem] border border-brand-green/10 bg-white p-3">
+        <div className="h-36 rounded-[1.5rem] border border-brand-green/10 bg-white p-3 sm:h-44">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={historicalAverages}>
               <Line

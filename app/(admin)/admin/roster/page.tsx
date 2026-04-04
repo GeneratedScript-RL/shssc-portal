@@ -1,12 +1,20 @@
 import RosterEditor from "@/components/features/admin/RosterEditor";
-import { getCommittees, getRanks, getRosters, getRosterEntries, getUsersWithAccessLevels } from "@/lib/supabase/queries";
+import {
+  getCommittees,
+  getLegacyWallEntries,
+  getRanks,
+  getRosters,
+  getRosterEntries,
+  getUsersWithAccessLevels,
+} from "@/lib/supabase/queries";
 
 export default async function AdminRosterPage() {
-  const [rosters, users, ranks, committees] = await Promise.all([
+  const [rosters, users, ranks, committees, highlights] = await Promise.all([
     getRosters(),
     getUsersWithAccessLevels(),
     getRanks(),
     getCommittees(),
+    getLegacyWallEntries(),
   ]);
 
   const entryGroups = await Promise.all(rosters.map((roster) => getRosterEntries(roster.id)));
@@ -18,7 +26,14 @@ export default async function AdminRosterPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-orange">Roster Editor</p>
         <h1 className="mt-3 text-4xl font-semibold text-brand-green">Maintain current and legacy officer rosters.</h1>
       </section>
-      <RosterEditor rosters={rosters} entries={entries} users={users} ranks={ranks} committees={committees} />
+      <RosterEditor
+        rosters={rosters}
+        entries={entries}
+        highlights={highlights}
+        users={users}
+        ranks={ranks}
+        committees={committees}
+      />
     </div>
   );
 }

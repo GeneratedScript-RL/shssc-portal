@@ -12,7 +12,7 @@ interface ThreadCardProps {
 export default function ThreadCard({ thread, channelSlug }: ThreadCardProps) {
   return (
     <Link href={`/forums/${channelSlug}/${thread.id}`} className="forum-card block">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             {thread.is_pinned ? <Badge>Pinned</Badge> : null}
@@ -21,7 +21,7 @@ export default function ThreadCard({ thread, channelSlug }: ThreadCardProps) {
           <h3 className="text-xl font-semibold text-brand-green">{thread.title}</h3>
           <UserBadge userId={thread.author_id} size="sm" />
         </div>
-        <div className="text-right text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:text-right">
           <p>{thread.reply_count} replies</p>
           <p>{formatDate(thread.last_reply_at, "MMM d, p")}</p>
         </div>

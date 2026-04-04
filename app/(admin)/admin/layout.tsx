@@ -12,9 +12,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     }
 
     return (
-      <div className="container grid gap-8 py-10 xl:grid-cols-[280px_1fr]">
+      <div className="container grid gap-6 py-8 sm:gap-8 sm:py-10 xl:grid-cols-[280px_1fr]">
         <AdminSidebar permissions={permissions} isSysadmin={isSysadmin} />
-        <div className="space-y-6">{children}</div>
+        <div className="min-w-0 space-y-6">{children}</div>
       </div>
     );
   } catch {

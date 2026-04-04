@@ -30,7 +30,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${sora.variable}`}>
       <body className="portal-shell">
         <Navbar />
-        <main className="pb-24 lg:pb-0">{children}</main>
+        <main className="pb-32 lg:pb-0">{children}</main>
         <Footer />
         <MobileNav />
         <Analytics />

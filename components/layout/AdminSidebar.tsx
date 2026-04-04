@@ -92,35 +92,69 @@ export default function AdminSidebar({ permissions, isSysadmin }: AdminSidebarPr
   );
 
   return (
-    <aside className="roblox-panel sticky top-28 hidden h-fit xl:block">
-      <div className="mb-5 rounded-[1.35rem] bg-brand-green px-5 py-4 text-white">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-yellow">
-          Admin Control
-        </p>
-        <h2 className="mt-2 text-xl font-semibold">SHSSC Management</h2>
-        <p className="mt-1 text-sm text-white/75">
-          Role, roster, and council systems organized like a management console.
-        </p>
+    <>
+      <div className="xl:hidden">
+        <div className="roblox-panel space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-orange">
+              Admin Control
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-brand-green">SHSSC Management</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Quick mobile navigation for council tools and moderation screens.
+            </p>
+          </div>
+          <nav className="mobile-chip-row" aria-label="Admin navigation">
+            {visibleItems.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "touch-target inline-flex shrink-0 items-center gap-2 rounded-full border border-brand-green/15 bg-white px-4 py-2 text-sm font-semibold whitespace-nowrap text-brand-green/75 transition hover:border-brand-green/30 hover:text-brand-green",
+                    active && "border-brand-green bg-brand-green text-white shadow-sm hover:text-white",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
-      <nav className="space-y-2">
-        {visibleItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "touch-target flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-brand-green/70 transition hover:bg-brand-green/6 hover:text-brand-green",
-                active && "bg-brand-green text-white shadow-md hover:bg-brand-green hover:text-white",
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+      <aside className="roblox-panel sticky top-28 hidden h-fit xl:block">
+        <div className="mb-5 rounded-[1.35rem] bg-brand-green px-5 py-4 text-white">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-yellow">
+            Admin Control
+          </p>
+          <h2 className="mt-2 text-xl font-semibold">SHSSC Management</h2>
+          <p className="mt-1 text-sm text-white/75">
+            Role, roster, and council systems organized like a management console.
+          </p>
+        </div>
+        <nav className="space-y-2">
+          {visibleItems.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "touch-target flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-brand-green/70 transition hover:bg-brand-green/6 hover:text-brand-green",
+                  active && "bg-brand-green text-white shadow-md hover:bg-brand-green hover:text-white",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }

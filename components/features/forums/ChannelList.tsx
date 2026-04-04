@@ -12,8 +12,8 @@ export default function ChannelList({ channels }: ChannelListProps) {
     <div className="grid gap-4">
       {channels.map((channel) => (
         <Link key={channel.id} href={`/forums/${channel.slug}`} className="forum-card">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-4">
               <div className="mt-1 rounded-2xl bg-brand-green/10 p-3 text-brand-green">
                 <Hash className="h-5 w-5" />
               </div>
@@ -22,7 +22,7 @@ export default function ChannelList({ channels }: ChannelListProps) {
                 <p className="mt-1 text-sm text-muted-foreground">{channel.description}</p>
               </div>
             </div>
-            <div className="text-right text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:text-right">
               <p>{channel.thread_count ?? 0} threads</p>
               <p>{channel.last_activity ? formatDate(channel.last_activity, "MMM d") : "Quiet"}</p>
             </div>

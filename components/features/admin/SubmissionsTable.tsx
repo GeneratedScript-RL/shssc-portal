@@ -31,7 +31,7 @@ export default function SubmissionsTable({ submissions: initialSubmissions }: Su
 
   return (
     <div className="roblox-panel">
-      <Table>
+      <Table className="min-w-[44rem]">
         <TableHeader>
           <TableRow>
             <TableHead>Subject</TableHead>

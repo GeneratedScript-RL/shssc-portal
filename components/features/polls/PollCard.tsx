@@ -12,7 +12,7 @@ export default function PollCard({ poll }: PollCardProps) {
 
   return (
     <Link href={`/vote/${poll.id}`} className="forum-card flex flex-col">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <Badge variant={open ? "default" : "warning"}>{open ? "Open" : "Closed"}</Badge>
         <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {poll.closes_at ? `Closes ${formatDate(poll.closes_at, "MMM d")}` : "No close date"}

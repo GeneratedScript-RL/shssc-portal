@@ -43,7 +43,7 @@ export default function PermissionsGrid({
 
   return (
     <div className="roblox-panel">
-      <Table>
+      <Table className="min-w-[72rem]">
         <TableHeader>
           <TableRow>
             <TableHead>Access Level</TableHead>

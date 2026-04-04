@@ -40,10 +40,10 @@ export default function ThreadDetail({
           <UserBadge userId={thread.author_id} />
         </div>
         <RichTextRenderer className="mt-6" content={thread.body as never} />
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <ReactionBar targetType="thread" targetId={thread.id} reactions={{}} />
           {canModerate ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline">
                 Pin
               </Button>
@@ -60,7 +60,7 @@ export default function ThreadDetail({
       <section className="space-y-4">
         {replies.map((reply) => (
           <article key={reply.id} className="panel">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <UserBadge userId={reply.author_id} size="sm" />
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {formatDate(reply.created_at, "PPP p")}
@@ -73,7 +73,7 @@ export default function ThreadDetail({
                 <RichTextRenderer content={reply.body as never} />
               )}
             </div>
-            <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <ReactionBar targetType="reply" targetId={reply.id} reactions={{}} />
               {canModerate ? (
                 <Button type="button" variant="destructive" size="sm">

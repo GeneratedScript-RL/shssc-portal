@@ -46,12 +46,14 @@ export default function PortalTrackerPage() {
       <div className="grid gap-4">
         {suggestions.map((suggestion) => (
           <article key={suggestion.id} className="panel">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <Badge variant="outline">{suggestion.status}</Badge>
                 <h2 className="mt-4 text-2xl font-semibold text-brand-green">{suggestion.subject}</h2>
               </div>
-              <Button onClick={() => upvote(suggestion.id)}>Upvote {suggestion.upvotes}</Button>
+              <Button className="w-full sm:w-auto" onClick={() => upvote(suggestion.id)}>
+                Upvote {suggestion.upvotes}
+              </Button>
             </div>
           </article>
         ))}

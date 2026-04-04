@@ -1,4 +1,14 @@
-import type { ForumChannelRecord, ForumThreadRecord, PollRecord, PostRecord, SubmissionRecord, Tables, UserProfile } from "@/types";
+import type {
+  ForumChannelRecord,
+  ForumThreadRecord,
+  LegacyHighlightRecord,
+  LegacyRosterEntryRecord,
+  PollRecord,
+  PostRecord,
+  SubmissionRecord,
+  Tables,
+  UserProfile,
+} from "@/types";
 import { createServiceRoleClient, safeQuery } from "@/lib/supabase/server";
 
 export async function getLatestAnnouncements() {
@@ -181,31 +191,68 @@ export async function getRosterEntries(rosterId: string) {
     const supabase = createServiceRoleClient();
     const { data } = await supabase
       .from("officer_roster_entries")
-      .select("*, ranks(name, color_hex)")
-      .eq("roster_id", rosterId);
+      .select("*, ranks(id, name, color_hex), users(id, full_name, avatar_url)")
+      .eq("roster_id", rosterId)
+      .order("order_index", { ascending: true })
+      .order("position_title", { ascending: true });
 
-    return (data ?? []).map((entry) => ({
+    const rosterEntries = (data ?? []) as any[];
+    const userIds = Array.from(new Set(rosterEntries.map((entry) => entry.user_id)));
+    const { data: awardLinks } = userIds.length
+      ? await supabase
+          .from("user_awards")
+          .select("user_id, awards(id, name, emblem_url, description)")
+          .in("user_id", userIds)
+      : { data: [] as any[] };
+
+    const awardsByUser = (awardLinks ?? []).reduce<
+      Map<string, Pick<Tables<"awards">, "id" | "name" | "emblem_url" | "description">[]>
+    >((acc, entry: any) => {
+      const awards = acc.get(entry.user_id) ?? [];
+      const award = Array.isArray(entry.awards) ? entry.awards[0] : entry.awards;
+
+      if (award) {
+        awards.push(award);
+        acc.set(entry.user_id, awards);
+      }
+
+      return acc;
+    }, new Map());
+
+    return rosterEntries.map((entry: any) => ({
       ...entry,
       rank: Array.isArray(entry.ranks) ? entry.ranks[0] : entry.ranks,
-    })) as Array<Tables<"officer_roster_entries"> & { rank?: Pick<Tables<"ranks">, "name" | "color_hex"> | null }>;
-  }, [] as Array<Tables<"officer_roster_entries"> & { rank?: Pick<Tables<"ranks">, "name" | "color_hex"> | null }>);
+      user: Array.isArray(entry.users) ? entry.users[0] : entry.users,
+      awards: awardsByUser.get(entry.user_id) ?? [],
+    })) as LegacyRosterEntryRecord[];
+  }, [] as LegacyRosterEntryRecord[]);
 }
 
-export async function getLegacyWallEntries() {
+export async function getLegacyWallEntries(rosterId?: string) {
   return safeQuery(async () => {
     const supabase = createServiceRoleClient();
-    const { data } = await supabase
+    let query = supabase
       .from("legacy_wall_entries")
-      .select("id, title, description, order_index, officer_rosters!inner(school_year)")
+      .select("id, roster_id, title, description, order_index, created_by, created_at, officer_rosters!inner(school_year)")
       .order("order_index", { ascending: true });
+
+    if (rosterId) {
+      query = query.eq("roster_id", rosterId);
+    }
+
+    const { data } = await query;
 
     return (data ?? []).map((entry: any) => ({
       id: entry.id,
+      roster_id: entry.roster_id,
       title: entry.title,
       description: entry.description,
+      order_index: entry.order_index,
+      created_by: entry.created_by,
+      created_at: entry.created_at,
       school_year: entry.officer_rosters?.school_year ?? "Unknown",
-    }));
-  }, [] as Array<{ id: string; title: string; description: string; school_year: string }>);
+    })) as LegacyHighlightRecord[];
+  }, [] as LegacyHighlightRecord[]);
 }
 
 export async function getRecognitionData() {

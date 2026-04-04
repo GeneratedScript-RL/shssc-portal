@@ -17,6 +17,7 @@ const baseNavItems = [
   { href: "/news", label: "News" },
   { href: "/events", label: "Events" },
   { href: "/vote", label: "Vote" },
+  { href: "/legacy", label: "Legacy" },
   { href: "/forums", label: "Forums" },
   { href: "/transparency", label: "Transparency" },
   { href: "/portal", label: "Portal" },
@@ -67,8 +68,8 @@ export default function Navbar() {
       <AuthBootstrap />
       <PrivacyNotice />
       <header className="sticky top-0 z-40 border-b border-white/10 bg-brand-green/95 backdrop-blur">
-        <div className="container flex min-h-[5.5rem] items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-4">
+        <div className="container flex min-h-[5rem] items-center justify-between gap-3 sm:min-h-[5.5rem] sm:gap-4">
+          <Link href="/" className="flex min-w-0 items-center gap-3 sm:gap-4">
             <div className="rounded-2xl border border-white/15 bg-white/10 p-2">
               <Image
                 src="/icon.png"
@@ -78,6 +79,9 @@ export default function Navbar() {
                 className="h-14 w-14 rounded-xl object-cover"
                 priority
               />
+            </div>
+            <div className="min-w-0 sm:hidden">
+              <p className="truncate text-sm font-semibold text-white">SHSSC Portal</p>
             </div>
             <div className="hidden sm:block">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-yellow">

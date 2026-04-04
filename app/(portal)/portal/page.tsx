@@ -147,21 +147,21 @@ export default function PortalPage() {
         </form>
       </section>
       <section className="panel">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-orange">Suggestion Tracker</p>
             <h2 className="mt-2 text-2xl font-semibold text-brand-green">Active public suggestions</h2>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <a href="/portal/tracker">Open tracker</a>
           </Button>
         </div>
         <div className="mt-6 grid gap-3">
           {suggestions.map((suggestion) => (
             <article key={suggestion.id} className="rounded-2xl border border-brand-green/10 p-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Badge variant="outline">{suggestion.status}</Badge>
-                <Button variant="ghost" onClick={() => upvote(suggestion.id)}>
+                <Button variant="ghost" className="w-full sm:w-auto" onClick={() => upvote(suggestion.id)}>
                   Upvote {suggestion.upvotes}
                 </Button>
               </div>

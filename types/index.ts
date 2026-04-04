@@ -98,6 +98,8 @@ export interface Database {
         rank_id: string | null;
         position_title: string;
         committee_id: string | null;
+        photo_url: string | null;
+        order_index: number;
       }>;
       legacy_wall_entries: TableDef<
         Timestamped & {
@@ -357,4 +359,14 @@ export type ForumThreadRecord = Tables<"forum_threads"> & {
 
 export type SubmissionRecord = Tables<"submissions"> & {
   upvotes?: number;
+};
+
+export type LegacyHighlightRecord = Tables<"legacy_wall_entries"> & {
+  school_year?: string;
+};
+
+export type LegacyRosterEntryRecord = Tables<"officer_roster_entries"> & {
+  rank?: Pick<Tables<"ranks">, "id" | "name" | "color_hex"> | null;
+  user?: Pick<Tables<"users">, "id" | "full_name" | "avatar_url"> | null;
+  awards?: Pick<Tables<"awards">, "id" | "name" | "emblem_url" | "description">[];
 };
