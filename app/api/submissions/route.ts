@@ -34,11 +34,14 @@ export async function POST(request: Request) {
   }
 
   const payload = submissionSchema.parse(await request.json());
+  const isPublicSuggestion =
+    payload.submission_type === "suggestion" ? payload.is_public : false;
   const supabase = createServiceRoleClient();
   const { data: submission, error: createError } = await supabase
     .from("submissions")
     .insert({
       ...payload,
+      is_public: isPublicSuggestion,
       submitter_id: context.user.id,
     })
     .select("*")

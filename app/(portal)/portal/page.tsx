@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +30,7 @@ interface SuggestionItem {
 
 export default function PortalPage() {
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const form = useForm<z.infer<typeof portalSchema>>({
     resolver: zodResolver(portalSchema),
@@ -41,28 +43,43 @@ export default function PortalPage() {
     },
   });
 
+  async function loadSuggestions() {
+    try {
+      const response = await fetch("/api/suggestions", { cache: "no-store" });
+      const data = await response.json();
+      setSuggestions(data.suggestions ?? []);
+    } catch {
+      setSuggestions([]);
+    }
+  }
+
   useEffect(() => {
-    void fetch("/api/suggestions")
-      .then((response) => response.json())
-      .then((data) => setSuggestions(data.suggestions ?? []))
-      .catch(() => setSuggestions([]));
+    void loadSuggestions();
   }, []);
 
   async function onSubmit(values: z.infer<typeof portalSchema>) {
     setStatus("saving");
+    setMessage(null);
     const response = await fetch("/api/submissions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
     });
 
+    const payload = await response.json().catch(() => null);
+
     if (response.ok) {
       form.reset();
       setStatus("success");
+      setMessage("Submission sent to the council.");
+      if (payload?.submission?.submission_type === "suggestion" && payload.submission.is_public) {
+        await loadSuggestions();
+      }
       return;
     }
 
     setStatus("error");
+    setMessage(payload?.error ?? "Unable to submit right now.");
   }
 
   async function upvote(id: string) {
@@ -119,6 +136,11 @@ export default function PortalPage() {
               <span className="text-sm text-brand-green">Display on the public suggestion tracker</span>
             </label>
           ) : null}
+          {message ? (
+            <p className={status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>
+              {message}
+            </p>
+          ) : null}
           <Button type="submit">
             {status === "saving" ? "Submitting..." : status === "success" ? "Submitted" : "Send to council"}
           </Button>
@@ -146,6 +168,11 @@ export default function PortalPage() {
               <h3 className="mt-4 text-lg font-semibold text-brand-green">{suggestion.subject}</h3>
             </article>
           ))}
+          {!suggestions.length ? (
+            <div className="rounded-2xl border border-dashed border-brand-green/15 px-4 py-6 text-sm text-muted-foreground">
+              No public suggestions yet. Public suggestions submitted here will appear in the tracker.
+            </div>
+          ) : null}
         </div>
       </section>
     </div>

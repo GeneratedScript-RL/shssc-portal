@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +19,9 @@ interface PollVoteFormProps {
 }
 
 export default function PollVoteForm({ poll }: PollVoteFormProps) {
+  const router = useRouter();
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
   const form = useForm<z.infer<typeof voteSchema>>({
     resolver: zodResolver(voteSchema),
     defaultValues: { option_ids: [] },
@@ -39,13 +42,24 @@ export default function PollVoteForm({ poll }: PollVoteFormProps) {
 
   async function onSubmit(values: z.infer<typeof voteSchema>) {
     setStatus("saving");
+    setMessage(null);
     const response = await fetch(`/api/polls/${poll.id}/vote`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
     });
 
-    setStatus(response.ok ? "success" : "error");
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setStatus("error");
+      setMessage(payload?.error ?? "Unable to submit your vote.");
+      return;
+    }
+
+    setStatus("success");
+    setMessage(payload?.message ?? "Vote recorded.");
+    router.refresh();
   }
 
   return (
@@ -65,6 +79,11 @@ export default function PollVoteForm({ poll }: PollVoteFormProps) {
         );
       })}
       <p className="text-sm text-red-600">{form.formState.errors.option_ids?.message}</p>
+      {message ? (
+        <p className={status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>
+          {message}
+        </p>
+      ) : null}
       <Button type="submit" disabled={status === "saving"}>
         {status === "saving" ? "Submitting vote..." : status === "success" ? "Vote recorded" : "Submit vote"}
       </Button>

@@ -11,6 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+const NO_RANK_VALUE = "__no-rank__";
+const NO_COMMITTEE_VALUE = "__no-committee__";
+
 const rosterEntrySchema = z.object({
   roster_id: z.string().uuid(),
   user_id: z.string().uuid(),
@@ -45,10 +48,13 @@ export default function RosterEditor({
       committee_id: "",
     },
   });
+  const selectedRosterId = form.watch("roster_id");
+  const selectedRankId = form.watch("rank_id");
+  const selectedCommitteeId = form.watch("committee_id");
 
   const selectedRosterEntries = useMemo(
-    () => entries.filter((entry) => entry.roster_id === form.watch("roster_id")),
-    [entries, form],
+    () => entries.filter((entry) => entry.roster_id === selectedRosterId),
+    [entries, selectedRosterId],
   );
 
   async function onSubmit(values: z.infer<typeof rosterEntrySchema>) {
@@ -106,12 +112,15 @@ export default function RosterEditor({
         </div>
         <div className="space-y-2">
           <Label>Rank</Label>
-          <Select value={form.watch("rank_id")} onValueChange={(value) => form.setValue("rank_id", value)}>
+          <Select
+            value={selectedRankId || NO_RANK_VALUE}
+            onValueChange={(value) => form.setValue("rank_id", value === NO_RANK_VALUE ? "" : value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Optional rank" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No rank</SelectItem>
+              <SelectItem value={NO_RANK_VALUE}>No rank</SelectItem>
               {ranks.map((rank) => (
                 <SelectItem key={rank.id} value={rank.id}>
                   {rank.name}
@@ -123,14 +132,16 @@ export default function RosterEditor({
         <div className="space-y-2">
           <Label>Committee</Label>
           <Select
-            value={form.watch("committee_id")}
-            onValueChange={(value) => form.setValue("committee_id", value)}
+            value={selectedCommitteeId || NO_COMMITTEE_VALUE}
+            onValueChange={(value) =>
+              form.setValue("committee_id", value === NO_COMMITTEE_VALUE ? "" : value)
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Optional committee" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No committee</SelectItem>
+              <SelectItem value={NO_COMMITTEE_VALUE}>No committee</SelectItem>
               {committees.map((committee) => (
                 <SelectItem key={committee.id} value={committee.id}>
                   {committee.name}

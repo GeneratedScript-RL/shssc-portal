@@ -14,11 +14,18 @@ interface SuggestionItem {
 export default function PortalTrackerPage() {
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
 
+  async function loadSuggestions() {
+    try {
+      const response = await fetch("/api/suggestions", { cache: "no-store" });
+      const data = await response.json();
+      setSuggestions(data.suggestions ?? []);
+    } catch {
+      setSuggestions([]);
+    }
+  }
+
   useEffect(() => {
-    void fetch("/api/suggestions")
-      .then((response) => response.json())
-      .then((data) => setSuggestions(data.suggestions ?? []))
-      .catch(() => setSuggestions([]));
+    void loadSuggestions();
   }, []);
 
   async function upvote(id: string) {
@@ -48,6 +55,11 @@ export default function PortalTrackerPage() {
             </div>
           </article>
         ))}
+        {!suggestions.length ? (
+          <div className="panel text-sm text-muted-foreground">
+            No public suggestions have been shared yet.
+          </div>
+        ) : null}
       </div>
     </div>
   );

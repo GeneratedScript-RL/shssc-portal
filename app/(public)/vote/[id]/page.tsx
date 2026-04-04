@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { createServiceRoleClient, safeQuery } from "@/lib/supabase/server";
 import { getPollById } from "@/lib/supabase/queries";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function VoteDetailPage({
   params,
