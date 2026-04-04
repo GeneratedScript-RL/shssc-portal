@@ -1,7 +1,7 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE access_levels (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   name text UNIQUE NOT NULL,
   hierarchy_order integer NOT NULL DEFAULT 0,
   is_sysadmin boolean NOT NULL DEFAULT false,
@@ -9,7 +9,7 @@ CREATE TABLE access_levels (
 );
 
 CREATE TABLE ranks (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   name text UNIQUE NOT NULL,
   color_hex text NOT NULL DEFAULT '#888888',
   hierarchy_order integer NOT NULL DEFAULT 0,
@@ -17,7 +17,7 @@ CREATE TABLE ranks (
 );
 
 CREATE TABLE users (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   auth_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   email text UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._%+-]+@gendejesus\.edu\.ph$'),
   student_id text UNIQUE,
@@ -31,7 +31,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE access_level_permissions (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   access_level_id uuid NOT NULL REFERENCES access_levels(id) ON DELETE CASCADE,
   permission text NOT NULL,
   granted boolean NOT NULL DEFAULT true,
@@ -39,7 +39,7 @@ CREATE TABLE access_level_permissions (
 );
 
 CREATE TABLE user_ranks (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rank_id uuid NOT NULL REFERENCES ranks(id) ON DELETE CASCADE,
   assigned_by uuid REFERENCES users(id),

@@ -1,5 +1,5 @@
 CREATE TABLE posts (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   title text NOT NULL,
   slug text UNIQUE NOT NULL,
   body jsonb NOT NULL DEFAULT '{}',

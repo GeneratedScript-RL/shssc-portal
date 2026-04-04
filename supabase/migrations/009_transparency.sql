@@ -1,5 +1,5 @@
 CREATE TABLE financial_summaries (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   period text NOT NULL,
   total_income numeric(12,2) NOT NULL DEFAULT 0,
   total_expenses numeric(12,2) NOT NULL DEFAULT 0,
@@ -11,7 +11,7 @@ CREATE TABLE financial_summaries (
 );
 
 CREATE TABLE resolutions (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   title text NOT NULL,
   resolution_number text UNIQUE NOT NULL,
   status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),

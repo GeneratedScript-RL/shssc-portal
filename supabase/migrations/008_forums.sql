@@ -1,5 +1,5 @@
 CREATE TABLE forum_channels (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   name text UNIQUE NOT NULL,
   slug text UNIQUE NOT NULL,
   description text,
@@ -12,7 +12,7 @@ CREATE TABLE forum_channels (
 );
 
 CREATE TABLE forum_threads (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   channel_id uuid NOT NULL REFERENCES forum_channels(id) ON DELETE CASCADE,
   title text NOT NULL,
   body jsonb NOT NULL DEFAULT '{}',
@@ -25,7 +25,7 @@ CREATE TABLE forum_threads (
 );
 
 CREATE TABLE forum_replies (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   thread_id uuid NOT NULL REFERENCES forum_threads(id) ON DELETE CASCADE,
   body jsonb NOT NULL DEFAULT '{}',
   author_id uuid NOT NULL REFERENCES users(id),
@@ -34,7 +34,7 @@ CREATE TABLE forum_replies (
 );
 
 CREATE TABLE forum_reactions (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   target_type text NOT NULL CHECK (target_type IN ('thread','reply')),
   target_id uuid NOT NULL,
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -43,7 +43,7 @@ CREATE TABLE forum_reactions (
 );
 
 CREATE TABLE forum_reports (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   target_type text NOT NULL CHECK (target_type IN ('thread','reply')),
   target_id uuid NOT NULL,
   reporter_id uuid REFERENCES users(id),

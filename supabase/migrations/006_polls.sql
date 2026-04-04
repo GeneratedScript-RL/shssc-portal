@@ -1,5 +1,5 @@
 CREATE TABLE polls (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   title text NOT NULL,
   description text,
   poll_type text NOT NULL DEFAULT 'single' CHECK (poll_type IN ('single','multiple','ranked')),
@@ -13,14 +13,14 @@ CREATE TABLE polls (
 );
 
 CREATE TABLE poll_options (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   poll_id uuid NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
   label text NOT NULL,
   order_index integer NOT NULL DEFAULT 0
 );
 
 CREATE TABLE poll_votes (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   poll_id uuid NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
   option_id uuid NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
   user_id uuid REFERENCES users(id),

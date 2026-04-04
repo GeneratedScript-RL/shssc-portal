@@ -1,5 +1,5 @@
 CREATE TABLE submissions (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   submission_type text NOT NULL CHECK (submission_type IN ('concern','suggestion','complaint','feedback')),
   subject text NOT NULL,
   body text NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE submissions (
 );
 
 CREATE TABLE submission_visibility (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   access_level_id uuid NOT NULL REFERENCES access_levels(id) ON DELETE CASCADE,
   submission_type text NOT NULL,
   can_view boolean NOT NULL DEFAULT false,
@@ -23,7 +23,7 @@ CREATE TABLE submission_visibility (
 );
 
 CREATE TABLE suggestion_upvotes (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   submission_id uuid NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE (submission_id, user_id)

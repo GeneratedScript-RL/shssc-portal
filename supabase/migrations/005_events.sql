@@ -1,5 +1,5 @@
 CREATE TABLE events (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   title text NOT NULL,
   description text,
   start_at timestamptz NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE events (
 );
 
 CREATE TABLE event_registrations (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   event_id uuid NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   registered_at timestamptz DEFAULT now(),

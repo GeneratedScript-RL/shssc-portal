@@ -1,5 +1,5 @@
 CREATE TABLE qa_sessions (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   title text NOT NULL,
   event_id uuid REFERENCES events(id),
   is_open boolean NOT NULL DEFAULT false,
@@ -11,7 +11,7 @@ CREATE TABLE qa_sessions (
 );
 
 CREATE TABLE qa_questions (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   session_id uuid NOT NULL REFERENCES qa_sessions(id) ON DELETE CASCADE,
   body text NOT NULL,
   submitter_id uuid REFERENCES users(id),
