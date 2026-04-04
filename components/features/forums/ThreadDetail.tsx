@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import RichTextRenderer from "@/components/shared/RichTextRenderer";
 import UserBadge from "@/components/shared/UserBadge";
 import ReactionBar from "@/components/features/forums/ReactionBar";
+import ForumModerationControls from "@/components/features/forums/ForumModerationControls";
 import ReplyComposer from "@/components/features/forums/ReplyComposer";
 import { Button } from "@/components/ui/button";
 import type { Tables } from "@/types";
@@ -15,6 +16,7 @@ interface ThreadDetailProps {
   canModerate: boolean;
   replyHint?: string | null;
   replyLoginHref?: string;
+  threadDeleteRedirectHref: string;
 }
 
 export default function ThreadDetail({
@@ -24,6 +26,7 @@ export default function ThreadDetail({
   canModerate,
   replyHint,
   replyLoginHref,
+  threadDeleteRedirectHref,
 }: ThreadDetailProps) {
   return (
     <div className="space-y-6">
@@ -43,17 +46,13 @@ export default function ThreadDetail({
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <ReactionBar targetType="thread" targetId={thread.id} reactions={{}} />
           {canModerate ? (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline">
-                Pin
-              </Button>
-              <Button type="button" variant="outline">
-                Lock
-              </Button>
-              <Button type="button" variant="destructive">
-                Delete
-              </Button>
-            </div>
+            <ForumModerationControls
+              targetType="thread"
+              targetId={thread.id}
+              isPinned={thread.is_pinned}
+              isLocked={thread.is_locked}
+              redirectHref={threadDeleteRedirectHref}
+            />
           ) : null}
         </div>
       </article>
@@ -75,10 +74,8 @@ export default function ThreadDetail({
             </div>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <ReactionBar targetType="reply" targetId={reply.id} reactions={{}} />
-              {canModerate ? (
-                <Button type="button" variant="destructive" size="sm">
-                  Delete
-                </Button>
+              {canModerate && !reply.is_deleted ? (
+                <ForumModerationControls targetType="reply" targetId={reply.id} />
               ) : null}
             </div>
           </article>

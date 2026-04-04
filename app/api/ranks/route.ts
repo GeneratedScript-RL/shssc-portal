@@ -40,3 +40,42 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ rank }, { status: 201 });
 }
+
+export async function DELETE(request: Request) {
+  const { error } = await requireApiUser();
+  if (error) {
+    return error;
+  }
+
+  const idResult = z.string().uuid().safeParse(new URL(request.url).searchParams.get("id"));
+  if (!idResult.success) {
+    return jsonError("Invalid rank id.", 400);
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error: detachError } = await supabase
+    .from("officer_roster_entries")
+    .update({ rank_id: null })
+    .eq("rank_id", idResult.data);
+
+  if (detachError) {
+    return jsonError(detachError.message, 400);
+  }
+
+  const { data: deletedRank, error: deleteError } = await supabase
+    .from("ranks")
+    .delete()
+    .eq("id", idResult.data)
+    .select("id")
+    .maybeSingle();
+
+  if (deleteError) {
+    return jsonError(deleteError.message, 400);
+  }
+
+  if (!deletedRank) {
+    return jsonError("Rank not found.", 404);
+  }
+
+  return NextResponse.json({ ok: true });
+}

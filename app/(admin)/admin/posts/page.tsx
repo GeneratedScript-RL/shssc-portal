@@ -24,6 +24,8 @@ const postSchema = z.object({
 
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<Tables<"posts">[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<z.infer<typeof postSchema>>({
     resolver: zodResolver(postSchema),
     defaultValues: {
@@ -42,12 +44,13 @@ export default function AdminPostsPage() {
   }, []);
 
   async function onSubmit(values: z.infer<typeof postSchema>) {
+    setErrorMessage(null);
     const response = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     if (response.ok) {
       setPosts((current) => [data.post, ...current]);
       form.reset({
@@ -57,7 +60,33 @@ export default function AdminPostsPage() {
         status: "draft",
         body: { type: "doc", content: [{ type: "paragraph" }] },
       });
+      return;
     }
+
+    setErrorMessage(data?.error ?? "Unable to create post right now.");
+  }
+
+  async function handleDelete(postId: string, postTitle: string) {
+    if (!window.confirm(`Delete "${postTitle}"?`)) {
+      return;
+    }
+
+    setDeletingId(postId);
+    setErrorMessage(null);
+
+    const response = await fetch(`/api/posts?id=${postId}`, {
+      method: "DELETE",
+    });
+    const data = await response.json().catch(() => null);
+
+    if (response.ok) {
+      setPosts((current) => current.filter((post) => post.id !== postId));
+      setDeletingId(null);
+      return;
+    }
+
+    setErrorMessage(data?.error ?? "Unable to delete this post right now.");
+    setDeletingId(null);
   }
 
   return (
@@ -116,11 +145,26 @@ export default function AdminPostsPage() {
         <Button type="submit">Create post</Button>
       </form>
       <section className="roblox-panel grid gap-3">
+        {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
         {posts.map((post) => (
-          <Link key={post.id} href={`/admin/posts/${post.id}`} className="rounded-2xl border border-brand-green/10 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-orange">{post.status}</p>
-            <h2 className="mt-2 text-2xl font-semibold text-brand-green">{post.title}</h2>
-          </Link>
+          <article key={post.id} className="rounded-2xl border border-brand-green/10 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <Link href={`/admin/posts/${post.id}`} className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-orange">{post.status}</p>
+                <h2 className="mt-2 text-2xl font-semibold text-brand-green">{post.title}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{post.post_type}</p>
+              </Link>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={deletingId === post.id}
+                onClick={() => void handleDelete(post.id, post.title)}
+              >
+                {deletingId === post.id ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </article>
         ))}
       </section>
     </div>

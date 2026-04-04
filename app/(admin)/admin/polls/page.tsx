@@ -24,6 +24,8 @@ const pollSchema = z.object({
 
 export default function AdminPollsPage() {
   const [polls, setPolls] = useState<Tables<"polls">[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<z.infer<typeof pollSchema>>({
     resolver: zodResolver(pollSchema),
     defaultValues: {
@@ -44,6 +46,7 @@ export default function AdminPollsPage() {
   }, []);
 
   async function onSubmit(values: z.infer<typeof pollSchema>) {
+    setErrorMessage(null);
     const response = await fetch("/api/polls", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,11 +55,37 @@ export default function AdminPollsPage() {
         options: values.options.split("\n").map((option) => option.trim()).filter(Boolean),
       }),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     if (response.ok) {
       setPolls((current) => [...current, data.poll]);
       form.reset();
+      return;
     }
+
+    setErrorMessage(data?.error ?? "Unable to create poll right now.");
+  }
+
+  async function handleDelete(pollId: string, pollTitle: string) {
+    if (!window.confirm(`Delete "${pollTitle}"?`)) {
+      return;
+    }
+
+    setDeletingId(pollId);
+    setErrorMessage(null);
+
+    const response = await fetch(`/api/polls?id=${pollId}`, {
+      method: "DELETE",
+    });
+    const data = await response.json().catch(() => null);
+
+    if (response.ok) {
+      setPolls((current) => current.filter((poll) => poll.id !== pollId));
+      setDeletingId(null);
+      return;
+    }
+
+    setErrorMessage(data?.error ?? "Unable to delete this poll right now.");
+    setDeletingId(null);
   }
 
   return (
@@ -110,9 +139,24 @@ export default function AdminPollsPage() {
         <Button type="submit">Create poll</Button>
       </form>
       <div className="roblox-panel grid gap-3">
+        {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
         {polls.map((poll) => (
           <article key={poll.id} className="rounded-2xl border border-brand-green/10 p-4">
-            <h2 className="text-2xl font-semibold text-brand-green">{poll.title}</h2>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-brand-green">{poll.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{poll.poll_type}</p>
+              </div>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={deletingId === poll.id}
+                onClick={() => void handleDelete(poll.id, poll.title)}
+              >
+                {deletingId === poll.id ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
             <p className="mt-2 text-sm text-muted-foreground">{poll.description}</p>
           </article>
         ))}

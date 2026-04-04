@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,9 @@ const postSchema = z.object({
 
 export default function AdminPostDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const form = useForm<z.infer<typeof postSchema>>({
     resolver: zodResolver(postSchema),
     defaultValues: {
@@ -51,11 +54,40 @@ export default function AdminPostDetailPage() {
   }, [form, params.id]);
 
   async function onSubmit(values: z.infer<typeof postSchema>) {
-    await fetch("/api/posts", {
+    setMessage(null);
+    const response = await fetch("/api/posts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: params.id, ...values }),
     });
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setMessage(data?.error ?? "Unable to save this post right now.");
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm("Delete this post?")) {
+      return;
+    }
+
+    setDeleting(true);
+    setMessage(null);
+
+    const response = await fetch(`/api/posts?id=${params.id}`, {
+      method: "DELETE",
+    });
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setMessage(data?.error ?? "Unable to delete this post right now.");
+      setDeleting(false);
+      return;
+    }
+
+    router.push("/admin/posts");
+    router.refresh();
   }
 
   return (
@@ -104,7 +136,15 @@ export default function AdminPostDetailPage() {
           </div>
         </div>
         <RichTextEditor value={form.watch("body")} onChange={(value) => form.setValue("body", value)} />
-        <Button type="submit">Save post</Button>
+        {message ? <p className="text-sm text-destructive">{message}</p> : null}
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" disabled={deleting}>
+            Save post
+          </Button>
+          <Button type="button" variant="destructive" disabled={deleting} onClick={() => void handleDelete()}>
+            {deleting ? "Deleting..." : "Delete post"}
+          </Button>
+        </div>
       </form>
     </div>
   );

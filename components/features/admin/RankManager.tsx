@@ -22,24 +22,53 @@ interface RankManagerProps {
 
 export default function RankManager({ ranks: initialRanks }: RankManagerProps) {
   const [ranks, setRanks] = useState(initialRanks);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<z.infer<typeof rankSchema>>({
     resolver: zodResolver(rankSchema),
     defaultValues: { color_hex: "#888888", hierarchy_order: initialRanks.length + 1, name: "" },
   });
 
   async function onSubmit(values: z.infer<typeof rankSchema>) {
+    setErrorMessage(null);
     const response = await fetch("/api/ranks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     if (response.ok) {
       const nextRanks = [...ranks, data.rank];
       setRanks(nextRanks);
       form.reset({ color_hex: "#888888", hierarchy_order: nextRanks.length + 1, name: "" });
+      return;
     }
+
+    setErrorMessage(data?.error ?? "Unable to create rank right now.");
+  }
+
+  async function handleDelete(rankId: string, rankName: string) {
+    if (!window.confirm(`Delete "${rankName}"?`)) {
+      return;
+    }
+
+    setDeletingId(rankId);
+    setErrorMessage(null);
+
+    const response = await fetch(`/api/ranks?id=${rankId}`, {
+      method: "DELETE",
+    });
+    const data = await response.json().catch(() => null);
+
+    if (response.ok) {
+      setRanks((current) => current.filter((rank) => rank.id !== rankId));
+      setDeletingId(null);
+      return;
+    }
+
+    setErrorMessage(data?.error ?? "Unable to delete this rank right now.");
+    setDeletingId(null);
   }
 
   return (
@@ -60,9 +89,21 @@ export default function RankManager({ ranks: initialRanks }: RankManagerProps) {
         <Button type="submit">Add rank</Button>
       </form>
       <div className="roblox-panel grid gap-3 md:grid-cols-2">
+        {errorMessage ? <p className="md:col-span-2 text-sm text-destructive">{errorMessage}</p> : null}
         {ranks.map((rank) => (
           <div key={rank.id} className="rounded-2xl border border-brand-green/10 p-4">
-            <RankChip rank={rank} />
+            <div className="flex items-start justify-between gap-3">
+              <RankChip rank={rank} />
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={deletingId === rank.id}
+                onClick={() => void handleDelete(rank.id, rank.name)}
+              >
+                {deletingId === rank.id ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
             <p className="mt-3 text-sm text-muted-foreground">Order: {rank.hierarchy_order}</p>
           </div>
         ))}

@@ -47,6 +47,7 @@ export default async function ForumThreadPage({
         }
         replyHint={access.canPost && !thread.is_locked ? null : replyHint}
         replyLoginHref={`/auth/login?redirectedFrom=/forums/${channel.slug}/${thread.id}`}
+        threadDeleteRedirectHref={`/forums/${channel.slug}`}
       />
     </div>
   );

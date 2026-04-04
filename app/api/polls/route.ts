@@ -68,3 +68,33 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ poll }, { status: 201 });
 }
+
+export async function DELETE(request: Request) {
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_POLLS);
+  if (error) {
+    return error;
+  }
+
+  const idResult = z.string().uuid().safeParse(new URL(request.url).searchParams.get("id"));
+  if (!idResult.success) {
+    return jsonError("Invalid poll id.", 400);
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data: deletedPoll, error: deleteError } = await supabase
+    .from("polls")
+    .delete()
+    .eq("id", idResult.data)
+    .select("id")
+    .maybeSingle();
+
+  if (deleteError) {
+    return jsonError(deleteError.message, 400);
+  }
+
+  if (!deletedPoll) {
+    return jsonError("Poll not found.", 404);
+  }
+
+  return NextResponse.json({ ok: true });
+}

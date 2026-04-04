@@ -21,6 +21,8 @@ const eventSchema = z.object({
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<Tables<"events">[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -40,16 +42,43 @@ export default function AdminEventsPage() {
   }, []);
 
   async function onSubmit(values: z.infer<typeof eventSchema>) {
+    setErrorMessage(null);
     const response = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     if (response.ok) {
       setEvents((current) => [...current, data.event]);
       form.reset();
+      return;
     }
+
+    setErrorMessage(data?.error ?? "Unable to create event right now.");
+  }
+
+  async function handleDelete(eventId: string, eventTitle: string) {
+    if (!window.confirm(`Delete "${eventTitle}"?`)) {
+      return;
+    }
+
+    setDeletingId(eventId);
+    setErrorMessage(null);
+
+    const response = await fetch(`/api/events?id=${eventId}`, {
+      method: "DELETE",
+    });
+    const data = await response.json().catch(() => null);
+
+    if (response.ok) {
+      setEvents((current) => current.filter((event) => event.id !== eventId));
+      setDeletingId(null);
+      return;
+    }
+
+    setErrorMessage(data?.error ?? "Unable to delete this event right now.");
+    setDeletingId(null);
   }
 
   return (
@@ -88,9 +117,24 @@ export default function AdminEventsPage() {
         <Button type="submit">Create event</Button>
       </form>
       <div className="roblox-panel grid gap-3">
+        {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
         {events.map((event) => (
           <article key={event.id} className="rounded-2xl border border-brand-green/10 p-4">
-            <h2 className="text-2xl font-semibold text-brand-green">{event.title}</h2>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-brand-green">{event.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{event.location}</p>
+              </div>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={deletingId === event.id}
+                onClick={() => void handleDelete(event.id, event.title)}
+              >
+                {deletingId === event.id ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
             <p className="mt-2 text-sm text-muted-foreground">{event.description}</p>
           </article>
         ))}

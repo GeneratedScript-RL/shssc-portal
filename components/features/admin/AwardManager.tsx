@@ -23,23 +23,52 @@ interface AwardManagerProps {
 
 export default function AwardManager({ awards: initialAwards }: AwardManagerProps) {
   const [awards, setAwards] = useState(initialAwards);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<z.infer<typeof awardSchema>>({
     resolver: zodResolver(awardSchema),
     defaultValues: { name: "", description: "", emblem_url: "" },
   });
 
   async function onSubmit(values: z.infer<typeof awardSchema>) {
+    setErrorMessage(null);
     const response = await fetch("/api/awards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     if (response.ok) {
       setAwards((current) => [...current, data.award]);
       form.reset();
+      return;
     }
+
+    setErrorMessage(data?.error ?? "Unable to create award right now.");
+  }
+
+  async function handleDelete(awardId: string, awardName: string) {
+    if (!window.confirm(`Delete "${awardName}"?`)) {
+      return;
+    }
+
+    setDeletingId(awardId);
+    setErrorMessage(null);
+
+    const response = await fetch(`/api/awards?id=${awardId}`, {
+      method: "DELETE",
+    });
+    const data = await response.json().catch(() => null);
+
+    if (response.ok) {
+      setAwards((current) => current.filter((award) => award.id !== awardId));
+      setDeletingId(null);
+      return;
+    }
+
+    setErrorMessage(data?.error ?? "Unable to delete this award right now.");
+    setDeletingId(null);
   }
 
   return (
@@ -60,9 +89,21 @@ export default function AwardManager({ awards: initialAwards }: AwardManagerProp
         <Button type="submit">Create award</Button>
       </form>
       <div className="roblox-panel grid gap-3 md:grid-cols-2">
+        {errorMessage ? <p className="md:col-span-2 text-sm text-destructive">{errorMessage}</p> : null}
         {awards.map((award) => (
           <div key={award.id} className="rounded-2xl border border-brand-green/10 p-4">
-            <AwardEmblem award={award} />
+            <div className="flex items-start justify-between gap-3">
+              <AwardEmblem award={award} />
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={deletingId === award.id}
+                onClick={() => void handleDelete(award.id, award.name)}
+              >
+                {deletingId === award.id ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
             <h3 className="mt-4 text-lg font-semibold text-brand-green">{award.name}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{award.description}</p>
           </div>

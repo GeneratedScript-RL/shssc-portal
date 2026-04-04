@@ -121,3 +121,56 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ post });
 }
+
+export async function DELETE(request: Request) {
+  const idResult = z.string().uuid().safeParse(new URL(request.url).searchParams.get("id"));
+  if (!idResult.success) {
+    return jsonError("Invalid post id.", 400);
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data: existingPost, error: lookupError } = await supabase
+    .from("posts")
+    .select("id, post_type")
+    .eq("id", idResult.data)
+    .maybeSingle();
+
+  if (lookupError) {
+    return jsonError(lookupError.message, 400);
+  }
+
+  if (!existingPost) {
+    return jsonError("Post not found.", 404);
+  }
+
+  const { error } = await requireApiUser(permissionMap[existingPost.post_type]);
+  if (error) {
+    return error;
+  }
+
+  const { error: detachError } = await supabase
+    .from("qa_sessions")
+    .update({ transcript_post_id: null })
+    .eq("transcript_post_id", idResult.data);
+
+  if (detachError) {
+    return jsonError(detachError.message, 400);
+  }
+
+  const { data: deletedPost, error: deleteError } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", idResult.data)
+    .select("id")
+    .maybeSingle();
+
+  if (deleteError) {
+    return jsonError(deleteError.message, 400);
+  }
+
+  if (!deletedPost) {
+    return jsonError("Post not found.", 404);
+  }
+
+  return NextResponse.json({ ok: true });
+}
