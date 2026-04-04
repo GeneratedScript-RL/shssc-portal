@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SHSSC Portal
+
+The **SHSSC Portal** is a full-stack web application designed to manage the Senior High School Student Council's operations. Built with modern technologies, it provides features for event management, forums, voting, transparency, and more.
+
+## Features
+
+- **Home Dashboard**: Displays announcements, quick links, upcoming events, and satisfaction polls.
+- **Events System**: Calendar view, event registration, and email reminders.
+- **Polls and Voting**: Create polls, submit votes, and view results.
+- **Forums**: Participate in discussions with real-time updates.
+- **Transparency**: Financial summaries and resolutions.
+- **Live Q&A**: Ask the council questions during live sessions.
+- **Admin Panel**: Manage users, roles, committees, awards, and more.
+
+## Tech Stack
+
+- **Framework**: Next.js 14 with App Router and TypeScript.
+- **Styling**: Tailwind CSS and shadcn/ui component library.
+- **Database**: Supabase for authentication, storage, and real-time updates.
+- **State Management**: Zustand.
+- **Forms**: React Hook Form with Zod validation.
+- **Rich Text**: TipTap editor.
+- **Email**: Resend SDK for transactional emails.
+- **Analytics**: Vercel Analytics.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 20+
+- npm, yarn, pnpm, or bun
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/shssc-portal.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd shssc-portal
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Development
+
+Start the development server:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the root directory and configure the following variables:
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+RESEND_API_KEY=
+NEXT_PUBLIC_SITE_URL=
+```
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+Deploy the application on [Vercel](https://vercel.com/):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push your code to a GitHub repository.
+2. Connect the repository to Vercel.
+3. Set the environment variables in the Vercel dashboard.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Folder Structure
 
-## Deploy on Vercel
+```
+shssc-portal/
+├── app/
+│   ├── (public)/
+│   ├── (portal)/
+│   ├── (profile)/
+│   ├── (admin)/
+│   ├── api/
+│   └── layout.tsx
+├── components/
+├── hooks/
+├── lib/
+├── stores/
+├── supabase/
+├── types/
+├── public/
+├── middleware.ts
+├── tailwind.config.ts
+├── tsconfig.json
+└── README.md
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Fork the repository.
+2. Create a new branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "Add your message"
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+5. Open a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
