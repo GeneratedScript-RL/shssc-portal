@@ -17,16 +17,16 @@ export function createServerClient() {
       get(name: string) {
         return cookieStore.get(name)?.value;
       },
-      set(name: string, value: string, options) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         try {
-          cookieStore.set({ name, value, ...options });
+          cookieStore.set({ name, value, ...(options as object) });
         } catch {
           return;
         }
       },
-      remove(name: string, options) {
+      remove(name: string, options: Record<string, unknown>) {
         try {
-          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+          cookieStore.set({ name, value: "", ...(options as object), maxAge: 0 });
         } catch {
           return;
         }

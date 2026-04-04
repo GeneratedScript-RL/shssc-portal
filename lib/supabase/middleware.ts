@@ -9,13 +9,13 @@ export function createMiddlewareClient(request: NextRequest, response: NextRespo
       get(name: string) {
         return request.cookies.get(name)?.value;
       },
-      set(name: string, value: string, options) {
-        request.cookies.set({ name, value, ...options });
-        response.cookies.set({ name, value, ...options });
+      set(name: string, value: string, options: Record<string, unknown>) {
+        request.cookies.set(name, value);
+        response.cookies.set({ name, value, ...(options as object) });
       },
-      remove(name: string, options) {
-        request.cookies.set({ name, value: "", ...options, maxAge: 0 });
-        response.cookies.set({ name, value: "", ...options, maxAge: 0 });
+      remove(name: string, options: Record<string, unknown>) {
+        request.cookies.delete(name);
+        response.cookies.set({ name, value: "", ...(options as object), maxAge: 0 });
       },
     },
   });

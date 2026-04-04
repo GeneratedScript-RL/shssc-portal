@@ -10,7 +10,7 @@ interface UseRealtimeOptions {
   table: string;
   filter?: string;
   event?: "INSERT" | "UPDATE" | "DELETE" | "*";
-  onChange: (payload: unknown) => void;
+  onChange: (payload: any) => void;
 }
 
 export function useRealtime({

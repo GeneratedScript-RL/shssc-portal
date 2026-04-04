@@ -6,7 +6,19 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-type RowWithTimestamps<T> = T & {
+type TableDef<Row> = {
+  Row: Row;
+  Insert: Partial<Row>;
+  Update: Partial<Row>;
+  Relationships: [];
+};
+
+type ViewDef<Row> = {
+  Row: Row;
+  Relationships: [];
+};
+
+type Timestamped = {
   id: string;
   created_at: string;
 };
@@ -14,30 +26,22 @@ type RowWithTimestamps<T> = T & {
 export interface Database {
   public: {
     Tables: {
-      access_levels: {
-        Row: RowWithTimestamps<{
+      access_levels: TableDef<
+        Timestamped & {
           name: string;
           hierarchy_order: number;
           is_sysadmin: boolean;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["access_levels"]["Row"]> & {
-          name: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["access_levels"]["Row"]>;
-      };
-      ranks: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      ranks: TableDef<
+        Timestamped & {
           name: string;
           color_hex: string;
           hierarchy_order: number;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["ranks"]["Row"]> & {
-          name: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["ranks"]["Row"]>;
-      };
-      users: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      users: TableDef<
+        Timestamped & {
           auth_id: string | null;
           email: string;
           student_id: string | null;
@@ -47,65 +51,37 @@ export interface Database {
           privacy_consent: boolean;
           is_active: boolean;
           created_by: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["users"]["Row"]> & {
-          email: string;
-          full_name: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["users"]["Row"]>;
-      };
-      access_level_permissions: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      access_level_permissions: TableDef<
+        Timestamped & {
           access_level_id: string;
           permission: string;
           granted: boolean;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["access_level_permissions"]["Row"]> & {
-          access_level_id: string;
-          permission: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["access_level_permissions"]["Row"]>;
-      };
-      user_ranks: {
-        Row: {
-          id: string;
-          user_id: string;
-          rank_id: string;
-          assigned_by: string | null;
-          assigned_at: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["user_ranks"]["Row"]> & {
-          user_id: string;
-          rank_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["user_ranks"]["Row"]>;
-      };
-      committees: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      user_ranks: TableDef<{
+        id: string;
+        user_id: string;
+        rank_id: string;
+        assigned_by: string | null;
+        assigned_at: string;
+      }>;
+      committees: TableDef<
+        Timestamped & {
           name: string;
           description: string | null;
           created_by: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["committees"]["Row"]> & {
-          name: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["committees"]["Row"]>;
-      };
-      committee_members: {
-        Row: {
-          id: string;
-          committee_id: string;
-          user_id: string;
-          role_in_committee: string | null;
-        };
-        Insert: Partial<Database["public"]["Tables"]["committee_members"]["Row"]> & {
-          committee_id: string;
-          user_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["committee_members"]["Row"]>;
-      };
-      officer_rosters: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      committee_members: TableDef<{
+        id: string;
+        committee_id: string;
+        user_id: string;
+        role_in_committee: string | null;
+      }>;
+      officer_rosters: TableDef<
+        Timestamped & {
           school_year: string;
           is_active: boolean;
           achievements: string[];
@@ -113,94 +89,56 @@ export interface Database {
           milestones: string[];
           president_quote: string | null;
           president_user_id: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["officer_rosters"]["Row"]> & {
-          school_year: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["officer_rosters"]["Row"]>;
-      };
-      officer_roster_entries: {
-        Row: {
-          id: string;
-          roster_id: string;
-          user_id: string;
-          rank_id: string | null;
-          position_title: string;
-          committee_id: string | null;
-        };
-        Insert: Partial<Database["public"]["Tables"]["officer_roster_entries"]["Row"]> & {
-          roster_id: string;
-          user_id: string;
-          position_title: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["officer_roster_entries"]["Row"]>;
-      };
-      legacy_wall_entries: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      officer_roster_entries: TableDef<{
+        id: string;
+        roster_id: string;
+        user_id: string;
+        rank_id: string | null;
+        position_title: string;
+        committee_id: string | null;
+      }>;
+      legacy_wall_entries: TableDef<
+        Timestamped & {
           roster_id: string;
           title: string;
           description: string;
           order_index: number;
           created_by: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["legacy_wall_entries"]["Row"]> & {
-          roster_id: string;
-          title: string;
-          description: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["legacy_wall_entries"]["Row"]>;
-      };
-      awards: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      awards: TableDef<
+        Timestamped & {
           name: string;
           description: string | null;
           emblem_url: string | null;
           created_by: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["awards"]["Row"]> & {
-          name: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["awards"]["Row"]>;
-      };
-      user_awards: {
-        Row: {
-          id: string;
-          user_id: string;
-          award_id: string;
-          awarded_by: string | null;
-          awarded_at: string;
-          note: string | null;
-        };
-        Insert: Partial<Database["public"]["Tables"]["user_awards"]["Row"]> & {
-          user_id: string;
-          award_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["user_awards"]["Row"]>;
-      };
-      posts: {
-        Row: {
-          id: string;
-          title: string;
-          slug: string;
-          body: Json;
-          post_type: "news" | "memorandum" | "announcement" | "resolution" | "minutes";
-          status: "draft" | "published" | "archived";
-          author_id: string | null;
-          published_at: string | null;
-          attachments: string[];
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["posts"]["Row"]> & {
-          title: string;
-          slug: string;
-          body: Json;
-          post_type: Database["public"]["Tables"]["posts"]["Row"]["post_type"];
-        };
-        Update: Partial<Database["public"]["Tables"]["posts"]["Row"]>;
-      };
-      events: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      user_awards: TableDef<{
+        id: string;
+        user_id: string;
+        award_id: string;
+        awarded_by: string | null;
+        awarded_at: string;
+        note: string | null;
+      }>;
+      posts: TableDef<{
+        id: string;
+        title: string;
+        slug: string;
+        body: Json;
+        post_type: "news" | "memorandum" | "announcement" | "resolution" | "minutes";
+        status: "draft" | "published" | "archived";
+        author_id: string | null;
+        published_at: string | null;
+        attachments: string[];
+        created_at: string;
+        updated_at: string;
+      }>;
+      events: TableDef<
+        Timestamped & {
           title: string;
           description: string | null;
           start_at: string;
@@ -209,30 +147,17 @@ export interface Database {
           is_registration_open: boolean;
           max_attendees: number | null;
           created_by: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["events"]["Row"]> & {
-          title: string;
-          start_at: string;
-          end_at: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["events"]["Row"]>;
-      };
-      event_registrations: {
-        Row: {
-          id: string;
-          event_id: string;
-          user_id: string;
-          registered_at: string;
-          reminder_sent: boolean;
-        };
-        Insert: Partial<Database["public"]["Tables"]["event_registrations"]["Row"]> & {
-          event_id: string;
-          user_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["event_registrations"]["Row"]>;
-      };
-      polls: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      event_registrations: TableDef<{
+        id: string;
+        event_id: string;
+        user_id: string;
+        registered_at: string;
+        reminder_sent: boolean;
+      }>;
+      polls: TableDef<
+        Timestamped & {
           title: string;
           description: string | null;
           poll_type: "single" | "multiple" | "ranked";
@@ -242,87 +167,49 @@ export interface Database {
           is_satisfaction_poll: boolean;
           closes_at: string | null;
           created_by: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["polls"]["Row"]> & {
-          title: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["polls"]["Row"]>;
-      };
-      poll_options: {
-        Row: {
-          id: string;
-          poll_id: string;
-          label: string;
-          order_index: number;
-        };
-        Insert: Partial<Database["public"]["Tables"]["poll_options"]["Row"]> & {
-          poll_id: string;
-          label: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["poll_options"]["Row"]>;
-      };
-      poll_votes: {
-        Row: {
-          id: string;
-          poll_id: string;
-          option_id: string;
-          user_id: string | null;
-          voted_at: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["poll_votes"]["Row"]> & {
-          poll_id: string;
-          option_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["poll_votes"]["Row"]>;
-      };
-      submissions: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      poll_options: TableDef<{
+        id: string;
+        poll_id: string;
+        label: string;
+        order_index: number;
+      }>;
+      poll_votes: TableDef<{
+        id: string;
+        poll_id: string;
+        option_id: string;
+        user_id: string | null;
+        voted_at: string;
+      }>;
+      submissions: TableDef<
+        Timestamped & {
           submission_type: "concern" | "suggestion" | "complaint" | "feedback";
           subject: string;
           body: string;
           is_anonymous: boolean;
+          is_public: boolean;
           submitter_id: string | null;
           status: "pending" | "reviewing" | "resolved" | "dismissed";
           assigned_to: string | null;
           internal_notes: string | null;
           resolved_at: string | null;
-          is_public: boolean;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["submissions"]["Row"]> & {
-          submission_type: Database["public"]["Tables"]["submissions"]["Row"]["submission_type"];
-          subject: string;
-          body: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["submissions"]["Row"]>;
-      };
-      submission_visibility: {
-        Row: {
-          id: string;
-          access_level_id: string;
-          submission_type: Database["public"]["Tables"]["submissions"]["Row"]["submission_type"];
-          can_view: boolean;
-          can_respond: boolean;
-        };
-        Insert: Partial<Database["public"]["Tables"]["submission_visibility"]["Row"]> & {
-          access_level_id: string;
-          submission_type: Database["public"]["Tables"]["submissions"]["Row"]["submission_type"];
-        };
-        Update: Partial<Database["public"]["Tables"]["submission_visibility"]["Row"]>;
-      };
-      suggestion_upvotes: {
-        Row: {
-          id: string;
-          submission_id: string;
-          user_id: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["suggestion_upvotes"]["Row"]> & {
-          submission_id: string;
-          user_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["suggestion_upvotes"]["Row"]>;
-      };
-      forum_channels: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      submission_visibility: TableDef<{
+        id: string;
+        access_level_id: string;
+        submission_type: "concern" | "suggestion" | "complaint" | "feedback";
+        can_view: boolean;
+        can_respond: boolean;
+      }>;
+      suggestion_upvotes: TableDef<{
+        id: string;
+        submission_id: string;
+        user_id: string;
+      }>;
+      forum_channels: TableDef<
+        Timestamped & {
           name: string;
           slug: string;
           description: string | null;
@@ -331,15 +218,10 @@ export interface Database {
           min_view_level_id: string | null;
           order_index: number;
           is_locked: boolean;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["forum_channels"]["Row"]> & {
-          name: string;
-          slug: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["forum_channels"]["Row"]>;
-      };
-      forum_threads: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      forum_threads: TableDef<
+        Timestamped & {
           channel_id: string;
           title: string;
           body: Json;
@@ -348,96 +230,55 @@ export interface Database {
           is_locked: boolean;
           reply_count: number;
           last_reply_at: string;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["forum_threads"]["Row"]> & {
-          channel_id: string;
-          title: string;
-          body: Json;
-          author_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["forum_threads"]["Row"]>;
-      };
-      forum_replies: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      forum_replies: TableDef<
+        Timestamped & {
           thread_id: string;
           body: Json;
           author_id: string;
           is_deleted: boolean;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["forum_replies"]["Row"]> & {
-          thread_id: string;
-          body: Json;
-          author_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["forum_replies"]["Row"]>;
-      };
-      forum_reactions: {
-        Row: {
-          id: string;
-          target_type: "thread" | "reply";
-          target_id: string;
-          user_id: string;
-          emoji: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["forum_reactions"]["Row"]> & {
-          target_type: "thread" | "reply";
-          target_id: string;
-          user_id: string;
-          emoji: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["forum_reactions"]["Row"]>;
-      };
-      forum_reports: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      forum_reactions: TableDef<{
+        id: string;
+        target_type: "thread" | "reply";
+        target_id: string;
+        user_id: string;
+        emoji: string;
+      }>;
+      forum_reports: TableDef<
+        Timestamped & {
           target_type: "thread" | "reply";
           target_id: string;
           reporter_id: string | null;
           reason: string;
           resolved: boolean;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["forum_reports"]["Row"]> & {
-          target_type: "thread" | "reply";
-          target_id: string;
-          reason: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["forum_reports"]["Row"]>;
-      };
-      financial_summaries: {
-        Row: {
-          id: string;
-          period: string;
-          total_income: number;
-          total_expenses: number;
-          balance: number;
-          summary_text: string | null;
-          attachments: string[];
-          published_by: string | null;
-          published_at: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["financial_summaries"]["Row"]> & {
-          period: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["financial_summaries"]["Row"]>;
-      };
-      resolutions: {
-        Row: {
-          id: string;
-          title: string;
-          resolution_number: string;
-          status: "pending" | "approved" | "rejected";
-          body: string | null;
-          meeting_date: string | null;
-          approved_at: string | null;
-          published_at: string | null;
-        };
-        Insert: Partial<Database["public"]["Tables"]["resolutions"]["Row"]> & {
-          title: string;
-          resolution_number: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["resolutions"]["Row"]>;
-      };
-      qa_sessions: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      financial_summaries: TableDef<{
+        id: string;
+        period: string;
+        total_income: number;
+        total_expenses: number;
+        balance: number;
+        summary_text: string | null;
+        attachments: string[];
+        published_by: string | null;
+        published_at: string;
+      }>;
+      resolutions: TableDef<{
+        id: string;
+        title: string;
+        resolution_number: string;
+        status: "pending" | "approved" | "rejected";
+        body: string | null;
+        meeting_date: string | null;
+        approved_at: string | null;
+        published_at: string | null;
+      }>;
+      qa_sessions: TableDef<
+        Timestamped & {
           title: string;
           event_id: string | null;
           is_open: boolean;
@@ -445,54 +286,45 @@ export interface Database {
           created_by: string | null;
           opened_at: string | null;
           closed_at: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["qa_sessions"]["Row"]> & {
-          title: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["qa_sessions"]["Row"]>;
-      };
-      qa_questions: {
-        Row: RowWithTimestamps<{
+        }
+      >;
+      qa_questions: TableDef<
+        Timestamped & {
           session_id: string;
           body: string;
           submitter_id: string | null;
           is_anonymous: boolean;
           status: "queued" | "answered" | "skipped";
           answered_at: string | null;
-        }>;
-        Insert: Partial<Database["public"]["Tables"]["qa_questions"]["Row"]> & {
-          session_id: string;
-          body: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["qa_questions"]["Row"]>;
-      };
+        }
+      >;
     };
     Views: {
-      current_user_permissions: {
-        Row: {
-          permission: string;
-        };
-      };
+      current_user_permissions: ViewDef<{
+        permission: string;
+      }>;
     };
     Functions: {
       has_permission: {
-        Args: {
-          perm: string;
-        };
+        Args: { perm: string };
         Returns: boolean;
       };
       is_sysadmin: {
-        Args: Record<PropertyKey, never>;
+        Args: Record<string, never>;
         Returns: boolean;
       };
     };
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
 
 export type Tables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Row"];
+
 export type Insert<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Insert"];
+
 export type Update<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Update"];
 

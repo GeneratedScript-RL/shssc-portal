@@ -1,8 +1,10 @@
+import Image from "next/image";
 import type { JSONContent } from "@tiptap/react";
+import type { Json } from "@/types";
 import { cn } from "@/lib/utils/cn";
 
 interface RichTextRendererProps {
-  content: JSONContent | Record<string, unknown> | null;
+  content: JSONContent | Record<string, unknown> | Json | null;
   className?: string;
 }
 
@@ -72,11 +74,13 @@ function renderNode(node: JSONContent, key: string): React.ReactNode {
       );
     case "image":
       return (
-        <img
+        <Image
           key={key}
           src={(node.attrs as { src?: string })?.src ?? ""}
           alt={(node.attrs as { alt?: string })?.alt ?? "Embedded content image"}
-          className="rounded-2xl"
+          width={1200}
+          height={675}
+          className="h-auto rounded-2xl"
         />
       );
     case "text":
@@ -86,7 +90,9 @@ function renderNode(node: JSONContent, key: string): React.ReactNode {
   }
 }
 
-export function extractTextFromRichContent(content: JSONContent | Record<string, unknown> | null) {
+export function extractTextFromRichContent(
+  content: JSONContent | Record<string, unknown> | Json | null,
+) {
   if (!content || typeof content !== "object") {
     return "";
   }

@@ -20,7 +20,7 @@ export function useLiveQA(sessionId: string, initialQuestions: Tables<"qa_questi
         );
       }
 
-      return [payload.new, ...current];
+      return [payload.new!, ...current];
     });
   }, []);
 
