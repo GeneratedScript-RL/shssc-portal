@@ -1,10 +1,22 @@
 import ChannelList from "@/components/features/forums/ChannelList";
+import { getCurrentUserContext } from "@/lib/auth/getCurrentUserContext";
+import { getForumChannelAccess } from "@/lib/auth/forumAccess";
 import { getForumChannels } from "@/lib/supabase/queries";
 
 export const revalidate = 60;
 
 export default async function ForumsPage() {
-  const channels = await getForumChannels();
+  const [channels, context] = await Promise.all([getForumChannels(), getCurrentUserContext()]);
+  const visibleChannels = (
+    await Promise.all(
+      channels.map(async (channel) => ({
+        channel,
+        access: await getForumChannelAccess(channel, context),
+      })),
+    )
+  )
+    .filter(({ access }) => access.canView)
+    .map(({ channel }) => channel);
 
   return (
     <div className="container space-y-8 py-10">
@@ -16,7 +28,7 @@ export default async function ForumsPage() {
           levels through database row-level security.
         </p>
       </section>
-      <ChannelList channels={channels} />
+      <ChannelList channels={visibleChannels} />
     </div>
   );
 }

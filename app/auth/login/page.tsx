@@ -40,12 +40,39 @@ export default function LoginPage() {
     const { error: signInError } = await supabase.auth.signInWithPassword(values);
 
     if (signInError) {
-      setError(signInError.message);
+      if (signInError.message.includes("Email not confirmed")) {
+        setError("Email not confirmed. Check your inbox for the confirmation link.");
+        setShowResend(true);
+      } else {
+        setError(signInError.message);
+      }
       return;
     }
 
     router.push(redirectTarget);
     router.refresh();
+  }
+
+  const [showResend, setShowResend] = useState(false);
+
+  async function handleResendConfirmation() {
+    setError("");
+    try {
+      const res = await fetch("/api/auth/resend-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.getValues("email") }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setShowResend(false);
+        setError("Confirmation email resent! Check your inbox.");
+      }
+    } catch {
+      setError("Failed to resend confirmation email.");
+    }
   }
 
   return (
@@ -68,6 +95,15 @@ export default function LoginPage() {
             <p className="text-sm text-red-600">{form.formState.errors.password?.message}</p>
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {showResend && (
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              className="text-sm text-brand-green underline"
+            >
+              Resend confirmation email
+            </button>
+          )}
           <Button type="submit" className="w-full">
             Sign in
           </Button>

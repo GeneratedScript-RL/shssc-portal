@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import RichTextRenderer from "@/components/shared/RichTextRenderer";
 import UserBadge from "@/components/shared/UserBadge";
@@ -12,6 +13,8 @@ interface ThreadDetailProps {
   replies: Tables<"forum_replies">[];
   canReply: boolean;
   canModerate: boolean;
+  replyHint?: string | null;
+  replyLoginHref?: string;
 }
 
 export default function ThreadDetail({
@@ -19,6 +22,8 @@ export default function ThreadDetail({
   replies,
   canReply,
   canModerate,
+  replyHint,
+  replyLoginHref,
 }: ThreadDetailProps) {
   return (
     <div className="space-y-6">
@@ -85,6 +90,16 @@ export default function ThreadDetail({
           <div className="mt-4">
             <ReplyComposer threadId={thread.id} disabled={thread.is_locked} />
           </div>
+        </section>
+      ) : replyHint ? (
+        <section className="panel space-y-4">
+          <h2 className="text-xl font-semibold text-brand-green">Reply to thread</h2>
+          <p className="text-sm text-muted-foreground">{replyHint}</p>
+          {replyLoginHref && replyHint.includes("Sign in") ? (
+            <Button asChild>
+              <Link href={replyLoginHref}>Sign in to reply</Link>
+            </Button>
+          ) : null}
         </section>
       ) : null}
     </div>

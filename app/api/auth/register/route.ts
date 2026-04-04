@@ -17,27 +17,41 @@ export async function POST(request: Request) {
   const payload = registerSchema.parse(await request.json());
   const supabase = createServiceRoleClient();
 
-  const [{ data: existingUser }, { data: studentLevel }] = await Promise.all([
-    supabase.from("users").select("id").eq("email", payload.email).maybeSingle(),
+  const [{ data: existingUser }, { data: studentLevel }, { data: authUsers }] = await Promise.all([
+    supabase.from("users").select("id, auth_id").eq("email", payload.email).maybeSingle(),
     supabase.from("access_levels").select("id").eq("name", "Student").maybeSingle(),
+    supabase.auth.admin.listUsers(),
   ]);
+
+  const existingAuthUser = authUsers?.users.find((u) => u.email === payload.email);
 
   if (existingUser) {
     return NextResponse.json({ error: "Email already registered." }, { status: 400 });
   }
 
-  const { data: authUser, error: createError } = await supabase.auth.admin.createUser({
-    email: payload.email,
-    password: payload.password,
-    email_confirm: false,
-  });
+  let authUserId: string;
 
-  if (createError || !authUser.user) {
-    return NextResponse.json({ error: createError?.message ?? "Unable to create user." }, { status: 400 });
+  if (existingAuthUser) {
+    if (!existingAuthUser.email_confirmed_at && existingAuthUser.created_at) {
+      authUserId = existingAuthUser.id;
+    } else {
+      return NextResponse.json({ error: "Email already registered." }, { status: 400 });
+    }
+  } else {
+    const { data: authUser, error: createError } = await supabase.auth.admin.createUser({
+      email: payload.email,
+      password: payload.password,
+      email_confirm: false,
+    });
+
+    if (createError || !authUser.user) {
+      return NextResponse.json({ error: createError?.message ?? "Unable to create user." }, { status: 400 });
+    }
+    authUserId = authUser.user.id;
   }
 
   const { error: insertError } = await supabase.from("users").insert({
-    auth_id: authUser.user.id,
+    auth_id: authUserId,
     email: payload.email,
     full_name: payload.full_name,
     access_level_id: studentLevel?.id ?? null,

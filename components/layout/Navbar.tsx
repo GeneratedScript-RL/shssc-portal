@@ -7,10 +7,11 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
+import { usePermissions } from "@/hooks/usePermissions";
 import { AuthBootstrap } from "@/components/layout/AuthBootstrap";
 import PrivacyNotice from "@/components/layout/PrivacyNotice";
 
-const navItems = [
+const baseNavItems = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/news", label: "News" },
@@ -23,6 +24,11 @@ const navItems = [
 
 function NavLinks({ mobile = false }: { mobile?: boolean }) {
   const pathname = usePathname();
+  const { permissions, isSysadmin } = usePermissions();
+  const navItems =
+    isSysadmin || permissions.length
+      ? [...baseNavItems, { href: "/admin/dashboard", label: "Admin" }]
+      : baseNavItems;
 
   return (
     <nav
@@ -33,7 +39,10 @@ function NavLinks({ mobile = false }: { mobile?: boolean }) {
       aria-label="Primary navigation"
     >
       {navItems.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active =
+          item.href === "/admin/dashboard"
+            ? pathname.startsWith("/admin")
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link
             key={item.href}

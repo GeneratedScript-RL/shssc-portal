@@ -3,11 +3,17 @@ import { getUserPermissions } from "@/lib/rbac/getUserPermissions";
 import type { Permission } from "@/lib/rbac/permissions";
 import type { Tables } from "@/types";
 
+export type AccessLevelContext = Pick<
+  Tables<"access_levels">,
+  "id" | "name" | "hierarchy_order" | "is_sysadmin"
+>;
+
 export interface AuthenticatedUserContext {
   sessionUserId: string;
   user: Tables<"users">;
   permissions: Permission[];
   isSysadmin: boolean;
+  accessLevel: AccessLevelContext | null;
 }
 
 export interface CurrentUserContext {
@@ -15,6 +21,7 @@ export interface CurrentUserContext {
   user: Tables<"users"> | null;
   permissions: Permission[];
   isSysadmin: boolean;
+  accessLevel: AccessLevelContext | null;
 }
 
 export async function getCurrentUserContext(): Promise<CurrentUserContext> {
@@ -29,34 +36,39 @@ export async function getCurrentUserContext(): Promise<CurrentUserContext> {
       user: null,
       permissions: [],
       isSysadmin: false,
+      accessLevel: null,
     };
   }
 
   const serviceClient = createServiceRoleClient();
-  const { data: user } = await serviceClient
+  const { data: rawUser } = await serviceClient
     .from("users")
-    .select("*")
+    .select("*, access_levels(id, name, hierarchy_order, is_sysadmin)")
     .eq("auth_id", session.user.id)
     .maybeSingle();
 
-  if (!user) {
+  if (!rawUser) {
     return {
       sessionUserId: session.user.id,
       user: null,
       permissions: [],
       isSysadmin: false,
+      accessLevel: null,
     };
   }
 
-  const [permissions, isSysadmin] = await Promise.all([
-    getUserPermissions(user.id),
-    serviceClient.rpc("is_sysadmin").then(({ data }) => !!data),
-  ]);
+  const accessLevel = Array.isArray(rawUser.access_levels)
+    ? rawUser.access_levels[0] ?? null
+    : rawUser.access_levels ?? null;
+  const { access_levels: _accessLevels, ...user } = rawUser;
+  const permissions = await getUserPermissions(user.id);
+  const isSysadmin = !!accessLevel?.is_sysadmin;
 
   return {
     sessionUserId: session.user.id,
     user,
     permissions,
     isSysadmin,
+    accessLevel,
   };
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { JSONContent } from "@tiptap/react";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUserContext } from "@/lib/auth/getCurrentUserContext";
+import { getForumChannelAccess } from "@/lib/auth/forumAccess";
 import { jsonError, requireApiUser } from "@/app/api/_helpers";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 
@@ -27,6 +28,25 @@ export async function POST(request: Request) {
 
   const payload = threadSchema.parse(await request.json());
   const supabase = createServiceRoleClient();
+  const { data: channel } = await supabase
+    .from("forum_channels")
+    .select("id, is_locked, min_post_level_id, min_view_level_id")
+    .eq("id", payload.channel_id)
+    .maybeSingle();
+
+  if (!channel) {
+    return jsonError("Channel not found.", 404);
+  }
+
+  const access = await getForumChannelAccess(channel, context);
+  if (channel.is_locked) {
+    return jsonError("This channel is currently locked.", 409);
+  }
+
+  if (!access.canPost) {
+    return jsonError("You do not have permission to post in this channel.", 403);
+  }
+
   const { data: thread, error } = await supabase
     .from("forum_threads")
     .insert({

@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Permission } from "@/lib/rbac/permissions";
 import { getSession } from "@/lib/auth/getSession";
-import { getUserPermissions } from "@/lib/rbac/getUserPermissions";
-import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getCurrentUserContext } from "@/lib/auth/getCurrentUserContext";
 
 export async function requirePermission(permission?: Permission) {
   const session = await getSession();
@@ -11,28 +10,21 @@ export async function requirePermission(permission?: Permission) {
     redirect("/auth/login");
   }
 
-  const supabase = createServiceRoleClient();
-  const { data: user } = await supabase
-    .from("users")
-    .select("id, access_level_id")
-    .eq("auth_id", session.user.id)
-    .maybeSingle();
+  const context = await getCurrentUserContext();
 
-  if (!user) {
+  if (!context.user) {
     redirect("/auth/login");
   }
 
-  const isSysadmin = await supabase.rpc("is_sysadmin").then(({ data }) => !!data);
-  const permissions = await getUserPermissions(user.id);
-
-  if (permission && !isSysadmin && !permissions.includes(permission)) {
+  if (permission && !context.isSysadmin && !context.permissions.includes(permission)) {
     throw new Error("Forbidden");
   }
 
   return {
     session,
-    user,
-    isSysadmin,
-    permissions,
+    user: context.user,
+    isSysadmin: context.isSysadmin,
+    permissions: context.permissions,
+    accessLevel: context.accessLevel,
   };
 }
