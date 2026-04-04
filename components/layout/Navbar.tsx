@@ -1,93 +1,113 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils/cn";
+import { AuthBootstrap } from "@/components/layout/AuthBootstrap";
+import PrivacyNotice from "@/components/layout/PrivacyNotice";
 
 const navItems = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "News", href: "/news" },
-  { label: "Events", href: "/events" },
-  { label: "Vote", href: "/vote" },
-  { label: "Transparency", href: "/transparency" },
-  { label: "Officers", href: "/officers" },
-  { label: "Legacy", href: "/legacy" },
-  { label: "Recognition", href: "/recognition" },
-  { label: "Forums", href: "/forums" },
-  { label: "Ask", href: "/ask" },
-  { label: "Portal", href: "/portal" },
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/news", label: "News" },
+  { href: "/events", label: "Events" },
+  { href: "/vote", label: "Vote" },
+  { href: "/forums", label: "Forums" },
+  { href: "/transparency", label: "Transparency" },
+  { href: "/portal", label: "Portal" },
 ];
 
-export default function Navbar() {
+function NavLinks({ mobile = false }: { mobile?: boolean }) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#2D7D32]">
-      <div className="flex h-16 items-center justify-between px-4 md:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="relative h-10 w-10 overflow-hidden rounded-full bg-white">
-            <Image
-              src="/icon.png"
-              alt="Student Council Emblem"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-          <span className="text-lg font-bold text-white hidden sm:block">
-            SHSSC Portal
-          </span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                pathname === item.href
-                  ? "bg-white/20 text-white"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <button
-          className="md:hidden p-2 text-white"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-        >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
-
-      {isOpen && (
-        <div className="md:hidden border-t border-white/20">
-          <nav className="flex flex-col p-4 gap-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
-                  pathname === item.href
-                    ? "bg-white/20 text-white"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
+    <nav
+      className={cn(
+        "flex items-center gap-1",
+        mobile && "flex-col items-stretch gap-3",
       )}
-    </header>
+      aria-label="Primary navigation"
+    >
+      {navItems.map((item) => {
+        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "touch-target rounded-full px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/12 hover:text-white",
+              active && "bg-white/18 text-white",
+              mobile && "border border-brand-green/10 bg-brand-yellow/15 text-brand-green hover:bg-brand-yellow/25",
+            )}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <>
+      <AuthBootstrap />
+      <PrivacyNotice />
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-brand-green/95 backdrop-blur">
+        <div className="container flex min-h-[5.5rem] items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-4">
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-2">
+              <Image
+                src="/icon.png"
+                alt="Senior High School Student Council emblem"
+                width={56}
+                height={56}
+                className="h-14 w-14 rounded-xl object-cover"
+                priority
+              />
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-yellow">
+                SHSSC Portal
+              </p>
+              <p className="text-lg font-semibold text-white">Student Council Management System</p>
+            </div>
+          </Link>
+          <div className="hidden lg:block">
+            <NavLinks />
+          </div>
+          <div className="flex items-center gap-3 lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-white/20 bg-white/10 text-white hover:bg-white/20"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="max-w-xs">
+                <div className="mt-12 space-y-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-orange">
+                      Navigation
+                    </p>
+                    <p className="mt-2 text-lg font-semibold text-brand-green">
+                      Explore the SHSSC Portal
+                    </p>
+                  </div>
+                  <NavLinks mobile />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+    </>
   );
 }

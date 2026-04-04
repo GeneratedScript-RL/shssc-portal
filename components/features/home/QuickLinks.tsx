@@ -1,66 +1,57 @@
 import Link from "next/link";
-import { Calendar, MessageSquare, BarChart3, Users, FileText } from "lucide-react";
+import { ArrowRight, CalendarDays, FileWarning, MessageSquareText, ShieldCheck, Vote } from "lucide-react";
 
-const quickLinks = [
+const links = [
   {
-    label: "Events",
     href: "/events",
-    icon: Calendar,
-    description: "View upcoming events",
-    color: "bg-blue-500",
+    title: "Events",
+    description: "Track council programs and upcoming deadlines.",
+    icon: CalendarDays,
   },
   {
-    label: "Submit Concern",
     href: "/portal",
-    icon: MessageSquare,
-    description: "Send feedback or concerns",
-    color: "bg-orange-500",
+    title: "Submit Concern",
+    description: "Send concerns, complaints, and suggestions securely.",
+    icon: FileWarning,
   },
   {
-    label: "Active Polls",
     href: "/vote",
-    icon: BarChart3,
-    description: "Vote on current polls",
-    color: "bg-purple-500",
+    title: "Active Polls",
+    description: "Participate in satisfaction polls and council votes.",
+    icon: Vote,
   },
   {
-    label: "Forums",
     href: "/forums",
-    icon: Users,
-    description: "Join the discussion",
-    color: "bg-green-500",
+    title: "Forums",
+    description: "Join student channels, bulletin updates, and discussions.",
+    icon: MessageSquareText,
   },
   {
-    label: "Transparency",
     href: "/transparency",
-    icon: FileText,
-    description: "View financial reports",
-    color: "bg-yellow-500",
+    title: "Transparency",
+    description: "Read financial summaries, resolutions, and by-laws.",
+    icon: ShieldCheck,
   },
 ];
 
 export default function QuickLinks() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-      {quickLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className="group flex flex-col items-center gap-3 rounded-xl border border-gray-200 p-6 transition-all hover:border-[#2D7D32] hover:shadow-md hover:-translate-y-1"
-        >
-          <div className={`${link.color} rounded-xl p-3 text-white`}>
-            <link.icon className="h-6 w-6" />
-          </div>
-          <div className="text-center">
-            <span className="block font-semibold text-gray-900 group-hover:text-[#2D7D32]">
-              {link.label}
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      {links.map((link) => {
+        const Icon = link.icon;
+        return (
+          <Link key={link.href} href={link.href} className="forum-card flex min-h-[180px] flex-col">
+            <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green">
+              <Icon className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-semibold text-brand-green">{link.title}</h3>
+            <p className="mt-2 flex-1 text-sm text-muted-foreground">{link.description}</p>
+            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-orange">
+              Open <ArrowRight className="h-4 w-4" />
             </span>
-            <span className="block text-xs text-muted-foreground">
-              {link.description}
-            </span>
-          </div>
-        </Link>
-      ))}
+          </Link>
+        );
+      })}
     </div>
   );
 }
