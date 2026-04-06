@@ -26,7 +26,7 @@ export default async function HomePage() {
       <section className="space-y-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-orange">Quick Links</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">Direct routes for students and officers</h2>
+          <h2 className="mt-2 text-3xl font-semibold text-brand-green">Direct routes for students and officers</h2>
         </div>
         <QuickLinks />
       </section>

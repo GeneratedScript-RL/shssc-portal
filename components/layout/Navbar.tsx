@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu } from "lucide-react";
@@ -23,7 +24,13 @@ const baseNavItems = [
   { href: "/portal", label: "Portal" },
 ];
 
-function NavLinks({ mobile = false }: { mobile?: boolean }) {
+function NavLinks({
+  mobile = false,
+  onNavigate,
+}: {
+  mobile?: boolean;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const { permissions, isSysadmin } = usePermissions();
   const navItems =
@@ -48,6 +55,7 @@ function NavLinks({ mobile = false }: { mobile?: boolean }) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={cn(
               "touch-target rounded-full px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/12 hover:text-white",
               active && "bg-white/18 text-white",
@@ -63,6 +71,13 @@ function NavLinks({ mobile = false }: { mobile?: boolean }) {
 }
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   return (
     <>
       <AuthBootstrap />
@@ -94,7 +109,7 @@ export default function Navbar() {
             <NavLinks />
           </div>
           <div className="flex items-center gap-3 lg:hidden">
-            <Sheet>
+            <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
@@ -114,7 +129,7 @@ export default function Navbar() {
                       Explore the SHSSC Portal
                     </p>
                   </div>
-                  <NavLinks mobile />
+                  <NavLinks mobile onNavigate={() => setOpen(false)} />
                 </div>
               </SheetContent>
             </Sheet>
