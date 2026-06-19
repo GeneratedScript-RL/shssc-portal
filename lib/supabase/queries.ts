@@ -181,6 +181,7 @@ export async function getLegacyRosters() {
     const { data } = await supabase
       .from("officer_rosters")
       .select("*")
+      .order("order_index", { ascending: true })
       .order("school_year", { ascending: false });
     return (data ?? []) as Tables<"officer_rosters">[];
   }, [] as Tables<"officer_rosters">[]);
@@ -512,7 +513,11 @@ export async function getCommittees() {
 export async function getRosters() {
   return safeQuery(async () => {
     const supabase = createServiceRoleClient();
-    const { data } = await supabase.from("officer_rosters").select("*").order("school_year", { ascending: false });
+    const { data } = await supabase
+      .from("officer_rosters")
+      .select("*")
+      .order("order_index", { ascending: true })
+      .order("school_year", { ascending: false });
     return (data ?? []) as Tables<"officer_rosters">[];
   }, [] as Tables<"officer_rosters">[]);
 }

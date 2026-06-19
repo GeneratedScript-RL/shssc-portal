@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type DragEvent, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImagePlus, Plus, Save } from "lucide-react";
+import { GripVertical, ImagePlus, Plus, Save, Trash2 } from "lucide-react";
 import type { LegacyHighlightRecord, LegacyRosterEntryRecord, Tables, UserProfile } from "@/types";
 import LegacyHighlightEditorCard from "@/components/features/admin/LegacyHighlightEditorCard";
 import RosterEntryCardEditor from "@/components/features/admin/RosterEntryCardEditor";
@@ -73,6 +73,32 @@ function textToLines(value: string) {
     .filter(Boolean);
 }
 
+function sortByOrderThenYear(rosters: Tables<"officer_rosters">[]) {
+  return [...rosters].sort(
+    (left, right) =>
+      left.order_index - right.order_index || right.school_year.localeCompare(left.school_year),
+  );
+}
+
+function reorderById<T extends { id: string; order_index: number }>(
+  items: T[],
+  draggedId: string,
+  droppedOnId: string,
+) {
+  const currentIndex = items.findIndex((item) => item.id === draggedId);
+  const targetIndex = items.findIndex((item) => item.id === droppedOnId);
+
+  if (currentIndex === -1 || targetIndex === -1 || currentIndex === targetIndex) {
+    return items;
+  }
+
+  const next = [...items];
+  const [movedItem] = next.splice(currentIndex, 1);
+  next.splice(targetIndex, 0, movedItem);
+
+  return next.map((item, index) => ({ ...item, order_index: index }));
+}
+
 export default function RosterEditor({
   rosters: initialRosters,
   entries: initialEntries,
@@ -81,14 +107,22 @@ export default function RosterEditor({
   ranks,
   committees,
 }: RosterEditorProps) {
-  const [rosters, setRosters] = useState(initialRosters);
+  const [rosters, setRosters] = useState(() => sortByOrderThenYear(initialRosters));
   const [entries, setEntries] = useState(initialEntries);
   const [highlights, setHighlights] = useState(initialHighlights);
-  const [selectedRosterId, setSelectedRosterId] = useState(initialRosters[0]?.id ?? "");
+  const [selectedRosterId, setSelectedRosterId] = useState(
+    () => sortByOrderThenYear(initialRosters)[0]?.id ?? "",
+  );
   const [creatingYear, setCreatingYear] = useState(false);
   const [creatingEntry, setCreatingEntry] = useState(false);
   const [creatingHighlight, setCreatingHighlight] = useState(false);
   const [uploadingNewPhoto, setUploadingNewPhoto] = useState(false);
+  const [draggedRosterId, setDraggedRosterId] = useState<string | null>(null);
+  const [draggedEntryId, setDraggedEntryId] = useState<string | null>(null);
+  const [savingRosterOrder, setSavingRosterOrder] = useState(false);
+  const [savingEntryOrder, setSavingEntryOrder] = useState(false);
+  const [deletingRosterId, setDeletingRosterId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const selectedRoster = useMemo(
     () => rosters.find((roster) => roster.id === selectedRosterId) ?? null,
@@ -204,12 +238,14 @@ export default function RosterEditor({
 
   async function handleCreateYear(values: z.infer<typeof createYearSchema>) {
     setCreatingYear(true);
+    setErrorMessage(null);
     try {
       const response = await fetch("/api/roster/years", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
+          order_index: rosters.length,
           achievements: [],
           milestones: [],
           impact_summary: "",
@@ -224,12 +260,12 @@ export default function RosterEditor({
             ? current.map((roster) => ({ ...roster, is_active: false }))
             : current;
 
-          return [payload.roster, ...next].sort((left, right) =>
-            right.school_year.localeCompare(left.school_year),
-          );
+          return sortByOrderThenYear([...next, payload.roster]);
         });
         setSelectedRosterId(payload.roster.id);
         createYearForm.reset({ school_year: "", is_active: false });
+      } else {
+        setErrorMessage(payload?.error ?? "Unable to create that legacy year right now.");
       }
     } finally {
       setCreatingYear(false);
@@ -241,12 +277,14 @@ export default function RosterEditor({
       return;
     }
 
+    setErrorMessage(null);
     const response = await fetch(`/api/roster/years/${selectedRoster.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         school_year: values.school_year,
         is_active: values.is_active,
+        order_index: selectedRoster.order_index,
         achievements: textToLines(values.achievements_text),
         milestones: textToLines(values.milestones_text),
         impact_summary: values.impact_summary,
@@ -267,9 +305,130 @@ export default function RosterEditor({
 
             return roster.id === payload.roster.id ? payload.roster : roster;
           })
-          .sort((left, right) => right.school_year.localeCompare(left.school_year)),
+          .sort(
+            (left, right) =>
+              left.order_index - right.order_index ||
+              right.school_year.localeCompare(left.school_year),
+          ),
       );
+    } else {
+      setErrorMessage(payload?.error ?? "Unable to save that legacy year right now.");
     }
+  }
+
+  async function handleRosterDrop(rosterId: string, event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault();
+
+    if (!draggedRosterId || draggedRosterId === rosterId) {
+      setDraggedRosterId(null);
+      return;
+    }
+
+    const previousRosters = rosters;
+    const nextRosters = reorderById(rosters, draggedRosterId, rosterId);
+    setRosters(nextRosters);
+    setDraggedRosterId(null);
+    setSavingRosterOrder(true);
+    setErrorMessage(null);
+
+    const response = await fetch("/api/roster/years", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        rosters: nextRosters.map((roster) => ({
+          id: roster.id,
+          order_index: roster.order_index,
+        })),
+      }),
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setRosters(previousRosters);
+      setErrorMessage(payload?.error ?? "Unable to save the legacy year order right now.");
+    }
+
+    setSavingRosterOrder(false);
+  }
+
+  async function handleEntryDrop(entryId: string, event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+
+    if (!draggedEntryId || draggedEntryId === entryId) {
+      setDraggedEntryId(null);
+      return;
+    }
+
+    const previousEntries = entries;
+    const nextSelectedEntries = reorderById(selectedRosterEntries, draggedEntryId, entryId);
+    const nextEntries = entries.map(
+      (entry) => nextSelectedEntries.find((nextEntry) => nextEntry.id === entry.id) ?? entry,
+    );
+
+    setEntries(nextEntries);
+    setDraggedEntryId(null);
+    setSavingEntryOrder(true);
+    setErrorMessage(null);
+
+    const response = await fetch("/api/roster", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entries: nextSelectedEntries.map((entry) => ({
+          id: entry.id,
+          order_index: entry.order_index,
+        })),
+      }),
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setEntries(previousEntries);
+      setErrorMessage(payload?.error ?? "Unable to save the officer card order right now.");
+    }
+
+    setSavingEntryOrder(false);
+  }
+
+  async function handleDeleteYear() {
+    if (!selectedRoster) {
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Delete "${selectedRoster.school_year}" and all officer cards and project highlights for that year?`,
+      )
+    ) {
+      return;
+    }
+
+    setDeletingRosterId(selectedRoster.id);
+    setErrorMessage(null);
+
+    const response = await fetch(`/api/roster/years/${selectedRoster.id}`, {
+      method: "DELETE",
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (response.ok) {
+      setRosters((current) => {
+        const next = current
+          .filter((roster) => roster.id !== selectedRoster.id)
+          .map((roster, index) => ({ ...roster, order_index: index }));
+        setSelectedRosterId(next[0]?.id ?? "");
+        return next;
+      });
+      setEntries((current) => current.filter((entry) => entry.roster_id !== selectedRoster.id));
+      setHighlights((current) =>
+        current.filter((highlight) => highlight.roster_id !== selectedRoster.id),
+      );
+      setDeletingRosterId(null);
+      return;
+    }
+
+    setErrorMessage(payload?.error ?? "Unable to delete that legacy year right now.");
+    setDeletingRosterId(null);
   }
 
   async function handleNewEntryPhoto(file?: File | null) {
@@ -356,22 +515,42 @@ export default function RosterEditor({
           <p className="mt-2 text-sm text-muted-foreground">
             Set the year details, order officers, upload photos, and publish standout projects.
           </p>
+          {savingRosterOrder ? (
+            <p className="mt-2 text-xs font-semibold text-brand-orange">Saving year order...</p>
+          ) : null}
         </div>
+        {errorMessage ? (
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {errorMessage}
+          </div>
+        ) : null}
         <div className="grid gap-3">
           {rosters.map((roster) => (
             <button
               key={roster.id}
               type="button"
+              draggable
+              onDragStart={(event) => {
+                setDraggedRosterId(roster.id);
+                event.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => void handleRosterDrop(roster.id, event)}
+              onDragEnd={() => setDraggedRosterId(null)}
               onClick={() => setSelectedRosterId(roster.id)}
               className={cn(
-                "rounded-[1.35rem] border px-4 py-4 text-left transition",
+                "cursor-grab rounded-[1.35rem] border px-4 py-4 text-left transition active:cursor-grabbing",
                 selectedRosterId === roster.id
                   ? "border-brand-green bg-brand-green text-white shadow-sm"
                   : "border-brand-green/10 bg-white hover:border-brand-green/25",
+                draggedRosterId === roster.id ? "opacity-60" : "",
               )}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold">{roster.school_year}</p>
+                <div className="flex min-w-0 items-center gap-2">
+                  <GripVertical className="h-4 w-4 shrink-0" />
+                  <p className="font-semibold">{roster.school_year}</p>
+                </div>
                 {roster.is_active ? (
                   <Badge className={selectedRosterId === roster.id ? "bg-white text-brand-green" : ""}>
                     Active
@@ -464,10 +643,22 @@ export default function RosterEditor({
                   <Label htmlFor="president-quote">President quote</Label>
                   <Textarea id="president-quote" {...rosterYearForm.register("president_quote")} />
                 </div>
-                <Button type="submit" className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Save year details
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                  <Button type="submit" className="gap-2">
+                    <Save className="h-4 w-4" />
+                    Save year details
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="gap-2"
+                    disabled={deletingRosterId === selectedRoster.id}
+                    onClick={() => void handleDeleteYear()}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {deletingRosterId === selectedRoster.id ? "Deleting year..." : "Delete year"}
+                  </Button>
+                </div>
               </form>
             </TabsContent>
             <TabsContent value="officers">
@@ -574,24 +765,46 @@ export default function RosterEditor({
                   </Button>
                 </form>
                 <div className="grid gap-4">
+                  {savingEntryOrder ? (
+                    <p className="text-xs font-semibold text-brand-orange">Saving officer order...</p>
+                  ) : null}
                   {selectedRosterEntries.map((entry) => (
-                    <RosterEntryCardEditor
+                    <div
                       key={entry.id}
-                      entry={entry}
-                      users={users}
-                      ranks={ranks}
-                      committees={committees}
-                      onSaved={(updatedEntry) =>
-                        setEntries((current) =>
-                          current.map((currentEntry) =>
-                            currentEntry.id === updatedEntry.id ? updatedEntry : currentEntry,
-                          ),
-                        )
-                      }
-                      onDeleted={(entryId) =>
-                        setEntries((current) => current.filter((currentEntry) => currentEntry.id !== entryId))
-                      }
-                    />
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => void handleEntryDrop(entry.id, event)}
+                      className={cn(draggedEntryId === entry.id ? "opacity-60" : "")}
+                    >
+                      <button
+                        type="button"
+                        draggable
+                        onDragStart={(event) => {
+                          setDraggedEntryId(entry.id);
+                          event.dataTransfer.effectAllowed = "move";
+                        }}
+                        onDragEnd={() => setDraggedEntryId(null)}
+                        className="mb-2 flex cursor-grab items-center gap-2 rounded-full border border-brand-green/10 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green shadow-sm active:cursor-grabbing"
+                      >
+                        <GripVertical className="h-4 w-4" />
+                        Drag card
+                      </button>
+                      <RosterEntryCardEditor
+                        entry={entry}
+                        users={users}
+                        ranks={ranks}
+                        committees={committees}
+                        onSaved={(updatedEntry) =>
+                          setEntries((current) =>
+                            current.map((currentEntry) =>
+                              currentEntry.id === updatedEntry.id ? updatedEntry : currentEntry,
+                            ),
+                          )
+                        }
+                        onDeleted={(entryId) =>
+                          setEntries((current) => current.filter((currentEntry) => currentEntry.id !== entryId))
+                        }
+                      />
+                    </div>
                   ))}
                   {!selectedRosterEntries.length ? (
                     <div className="rounded-[1.5rem] border border-dashed border-brand-green/15 px-4 py-8 text-sm text-muted-foreground">

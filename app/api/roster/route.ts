@@ -14,6 +14,17 @@ const rosterEntrySchema = z.object({
   order_index: z.number().int().min(0).default(0),
 });
 
+const reorderRosterEntriesSchema = z.object({
+  entries: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        order_index: z.number().int().min(0),
+      }),
+    )
+    .min(1),
+});
+
 export async function POST(request: Request) {
   const { error } = await requireApiUser(PERMISSIONS.MANAGE_ROSTER);
   if (error) {
@@ -51,4 +62,30 @@ export async function POST(request: Request) {
     },
     { status: 201 },
   );
+}
+
+export async function PATCH(request: Request) {
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_ROSTER);
+  if (error) {
+    return error;
+  }
+
+  const payload = reorderRosterEntriesSchema.parse(await request.json());
+  const supabase = createServiceRoleClient();
+
+  const results = await Promise.all(
+    payload.entries.map((entry) =>
+      supabase
+        .from("officer_roster_entries")
+        .update({ order_index: entry.order_index })
+        .eq("id", entry.id),
+    ),
+  );
+
+  const reorderError = results.find((result) => result.error)?.error;
+  if (reorderError) {
+    return jsonError(reorderError.message, 400);
+  }
+
+  return NextResponse.json({ ok: true });
 }

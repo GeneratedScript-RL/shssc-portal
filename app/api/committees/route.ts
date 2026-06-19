@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getCommittees } from "@/lib/supabase/queries";
 import { jsonError, requireApiUser } from "@/app/api/_helpers";
+import { PERMISSIONS } from "@/lib/rbac/permissions";
 
 const committeeSchema = z.object({
   name: z.string().min(2),
@@ -10,7 +11,7 @@ const committeeSchema = z.object({
 });
 
 export async function GET() {
-  const { error } = await requireApiUser();
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_COMMITTEES);
   if (error) {
     return error;
   }
@@ -20,7 +21,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireApiUser();
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_COMMITTEES);
   if (error) {
     return error;
   }
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { error } = await requireApiUser();
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_COMMITTEES);
   if (error) {
     return error;
   }

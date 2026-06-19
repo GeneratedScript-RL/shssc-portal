@@ -84,6 +84,7 @@ export interface Database {
         Timestamped & {
           school_year: string;
           is_active: boolean;
+          order_index: number;
           achievements: string[];
           impact_summary: string | null;
           milestones: string[];

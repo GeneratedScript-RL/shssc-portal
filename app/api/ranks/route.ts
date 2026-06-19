@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getRanks } from "@/lib/supabase/queries";
 import { jsonError, requireApiUser } from "@/app/api/_helpers";
+import { PERMISSIONS } from "@/lib/rbac/permissions";
 
 const rankSchema = z.object({
   name: z.string().min(2),
@@ -11,7 +12,7 @@ const rankSchema = z.object({
 });
 
 export async function GET() {
-  const { error } = await requireApiUser();
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_ROLES);
   if (error) {
     return error;
   }
@@ -21,7 +22,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireApiUser();
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_ROLES);
   if (error) {
     return error;
   }
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { error } = await requireApiUser();
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_ROLES);
   if (error) {
     return error;
   }

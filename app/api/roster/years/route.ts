@@ -7,10 +7,22 @@ import { PERMISSIONS } from "@/lib/rbac/permissions";
 const rosterYearSchema = z.object({
   school_year: z.string().min(4),
   is_active: z.boolean().default(false),
+  order_index: z.number().int().min(0).optional(),
   achievements: z.array(z.string().min(1)).default([]),
   milestones: z.array(z.string().min(1)).default([]),
   impact_summary: z.string().optional().or(z.literal("")),
   president_quote: z.string().optional().or(z.literal("")),
+});
+
+const reorderRosterYearsSchema = z.object({
+  rosters: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        order_index: z.number().int().min(0),
+      }),
+    )
+    .min(1),
 });
 
 export async function POST(request: Request) {
@@ -31,6 +43,7 @@ export async function POST(request: Request) {
     .insert({
       school_year: payload.school_year,
       is_active: payload.is_active,
+      order_index: payload.order_index ?? 0,
       achievements: payload.achievements,
       milestones: payload.milestones,
       impact_summary: payload.impact_summary || null,
@@ -44,4 +57,30 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ roster }, { status: 201 });
+}
+
+export async function PATCH(request: Request) {
+  const { error } = await requireApiUser(PERMISSIONS.MANAGE_ROSTER);
+  if (error) {
+    return error;
+  }
+
+  const payload = reorderRosterYearsSchema.parse(await request.json());
+  const supabase = createServiceRoleClient();
+
+  const results = await Promise.all(
+    payload.rosters.map((roster) =>
+      supabase
+        .from("officer_rosters")
+        .update({ order_index: roster.order_index })
+        .eq("id", roster.id),
+    ),
+  );
+
+  const reorderError = results.find((result) => result.error)?.error;
+  if (reorderError) {
+    return jsonError(reorderError.message, 400);
+  }
+
+  return NextResponse.json({ ok: true });
 }

@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import AchievementsList from "@/components/features/legacy/AchievementsList";
 import LegacyWall from "@/components/features/legacy/LegacyWall";
 import RecognitionList from "@/components/features/legacy/RecognitionList";
@@ -19,7 +18,23 @@ export default async function LegacyPage({
   const selectedRoster = rosters.find((roster) => roster.school_year === selectedYear) ?? rosters[0];
 
   if (!selectedRoster) {
-    notFound();
+    return (
+      <div className="container space-y-8 py-10">
+        <section className="panel-hero">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-orange">Legacy</p>
+          <h1 className="mt-3 text-4xl font-semibold text-brand-green">
+            Past councils, milestones, and institutional memory.
+          </h1>
+          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
+            Legacy years will appear here once an authorized council account creates the first
+            academic year and roster cards in the admin panel.
+          </p>
+        </section>
+        <section className="panel text-sm text-muted-foreground">
+          No legacy years have been published yet.
+        </section>
+      </div>
+    );
   }
 
   const [entries, legacyWallEntries] = await Promise.all([
