@@ -24,6 +24,7 @@ WITH permission_keys(permission) AS (
     ('manage:awards'),
     ('manage:roster'),
     ('moderate:forums'),
+    ('delete:forum_content'),
     ('post:bulletin'),
     ('live_qa:respond')
 )
@@ -36,7 +37,13 @@ SELECT
     WHEN al.name = 'Officer' THEN (
       pk.permission LIKE 'manage:%'
       OR pk.permission LIKE 'post:%'
-      OR pk.permission IN ('view:complaints', 'respond:complaints', 'moderate:forums', 'live_qa:respond')
+      OR pk.permission IN (
+        'view:complaints',
+        'respond:complaints',
+        'moderate:forums',
+        'delete:forum_content',
+        'live_qa:respond'
+      )
     )
     WHEN al.name = 'Committee Member' THEN pk.permission IN (
       'post:announcement',
@@ -46,6 +53,7 @@ SELECT
       'manage:polls',
       'manage:minutes',
       'moderate:forums',
+      'delete:forum_content',
       'live_qa:respond'
     )
     WHEN al.name = 'Grade Level Representative' THEN pk.permission IN (

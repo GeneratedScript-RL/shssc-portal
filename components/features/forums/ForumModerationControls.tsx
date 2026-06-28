@@ -12,6 +12,7 @@ interface ForumModerationControlsProps {
   redirectHref?: string;
   isPinned?: boolean;
   isLocked?: boolean;
+  canPinLock?: boolean;
 }
 
 export default function ForumModerationControls({
@@ -20,6 +21,7 @@ export default function ForumModerationControls({
   redirectHref,
   isPinned = false,
   isLocked = false,
+  canPinLock = false,
 }: ForumModerationControlsProps) {
   const router = useRouter();
   const [pendingAction, setPendingAction] = useState<ModerationAction | null>(null);
@@ -74,7 +76,7 @@ export default function ForumModerationControls({
   return (
     <div className="flex flex-col items-start gap-2">
       <div className="flex flex-wrap gap-2">
-        {targetType === "thread" ? (
+        {targetType === "thread" && canPinLock ? (
           <>
             <Button
               type="button"

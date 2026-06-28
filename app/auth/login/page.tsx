@@ -26,6 +26,13 @@ export default function LoginPage() {
 
     return new URLSearchParams(window.location.search).get("redirectedFrom") ?? "/portal";
   });
+  const [passwordWasReset] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return new URLSearchParams(window.location.search).has("passwordReset");
+  });
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -90,10 +97,18 @@ export default function LoginPage() {
             <p className="text-sm text-red-600">{form.formState.errors.email?.message}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="login-password">Password</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="login-password">Password</Label>
+              <Link href="/auth/forgot-password" className="text-sm font-semibold text-brand-green">
+                Forgot password?
+              </Link>
+            </div>
             <Input id="login-password" type="password" {...form.register("password")} />
             <p className="text-sm text-red-600">{form.formState.errors.password?.message}</p>
           </div>
+          {passwordWasReset ? (
+            <p className="text-sm text-brand-green">Password updated. Sign in with your new password.</p>
+          ) : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           {showResend && (
             <button

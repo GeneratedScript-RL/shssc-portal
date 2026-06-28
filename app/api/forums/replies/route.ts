@@ -115,9 +115,18 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const { error } = await requireApiUser(PERMISSIONS.MODERATE_FORUMS);
-  if (error) {
+  const { error, context } = await requireApiUser();
+  if (error || !context) {
     return error;
+  }
+
+  const canDeleteForumContent =
+    context.isSysadmin ||
+    context.permissions.includes(PERMISSIONS.MODERATE_FORUMS) ||
+    context.permissions.includes(PERMISSIONS.DELETE_FORUM_CONTENT);
+
+  if (!canDeleteForumContent) {
+    return jsonError("Forbidden", 403);
   }
 
   const { data: deletedReply, error: deleteError } = await supabase

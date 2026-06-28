@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   MANAGE_AWARDS: "manage:awards",
   MANAGE_ROSTER: "manage:roster",
   MODERATE_FORUMS: "moderate:forums",
+  DELETE_FORUM_CONTENT: "delete:forum_content",
   POST_BULLETIN: "post:bulletin",
   LIVE_QA_RESPOND: "live_qa:respond",
 } as const;
@@ -39,6 +40,7 @@ export const ADMIN_PERMISSION_LABELS: Record<Permission, string> = {
   [PERMISSIONS.MANAGE_AWARDS]: "Manage Awards",
   [PERMISSIONS.MANAGE_ROSTER]: "Manage Roster",
   [PERMISSIONS.MODERATE_FORUMS]: "Moderate Forums",
+  [PERMISSIONS.DELETE_FORUM_CONTENT]: "Delete Forum Posts & Replies",
   [PERMISSIONS.POST_BULLETIN]: "Post Bulletin",
   [PERMISSIONS.LIVE_QA_RESPOND]: "Respond to Live Q&A",
 };

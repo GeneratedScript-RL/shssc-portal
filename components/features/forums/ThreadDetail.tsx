@@ -14,6 +14,7 @@ interface ThreadDetailProps {
   replies: Tables<"forum_replies">[];
   canReply: boolean;
   canModerate: boolean;
+  canDeleteForumContent: boolean;
   replyHint?: string | null;
   replyLoginHref?: string;
   threadDeleteRedirectHref: string;
@@ -24,6 +25,7 @@ export default function ThreadDetail({
   replies,
   canReply,
   canModerate,
+  canDeleteForumContent,
   replyHint,
   replyLoginHref,
   threadDeleteRedirectHref,
@@ -45,12 +47,13 @@ export default function ThreadDetail({
         <RichTextRenderer className="mt-6" content={thread.body as never} />
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <ReactionBar targetType="thread" targetId={thread.id} reactions={{}} />
-          {canModerate ? (
+          {canDeleteForumContent ? (
             <ForumModerationControls
               targetType="thread"
               targetId={thread.id}
               isPinned={thread.is_pinned}
               isLocked={thread.is_locked}
+              canPinLock={canModerate}
               redirectHref={threadDeleteRedirectHref}
             />
           ) : null}
@@ -74,7 +77,7 @@ export default function ThreadDetail({
             </div>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <ReactionBar targetType="reply" targetId={reply.id} reactions={{}} />
-              {canModerate && !reply.is_deleted ? (
+              {canDeleteForumContent && !reply.is_deleted ? (
                 <ForumModerationControls targetType="reply" targetId={reply.id} />
               ) : null}
             </div>

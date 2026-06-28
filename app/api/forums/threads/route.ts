@@ -89,9 +89,22 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const { error } = await requireApiUser(PERMISSIONS.MODERATE_FORUMS);
-  if (error) {
+  const { error, context } = await requireApiUser();
+  if (error || !context) {
     return error;
+  }
+
+  const canModerateForums =
+    context.isSysadmin || context.permissions.includes(PERMISSIONS.MODERATE_FORUMS);
+  const canDeleteForumContent =
+    canModerateForums || context.permissions.includes(PERMISSIONS.DELETE_FORUM_CONTENT);
+
+  if ((payload.action === "pin" || payload.action === "lock") && !canModerateForums) {
+    return jsonError("Forbidden", 403);
+  }
+
+  if (payload.action === "delete" && !canDeleteForumContent) {
+    return jsonError("Forbidden", 403);
   }
 
   if (payload.action === "pin") {

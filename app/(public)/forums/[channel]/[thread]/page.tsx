@@ -45,6 +45,11 @@ export default async function ForumThreadPage({
         canModerate={
           context.isSysadmin || context.permissions.includes(PERMISSIONS.MODERATE_FORUMS)
         }
+        canDeleteForumContent={
+          context.isSysadmin ||
+          context.permissions.includes(PERMISSIONS.MODERATE_FORUMS) ||
+          context.permissions.includes(PERMISSIONS.DELETE_FORUM_CONTENT)
+        }
         replyHint={access.canPost && !thread.is_locked ? null : replyHint}
         replyLoginHref={`/auth/login?redirectedFrom=/forums/${channel.slug}/${thread.id}`}
         threadDeleteRedirectHref={`/forums/${channel.slug}`}
